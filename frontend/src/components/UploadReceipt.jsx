@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { uploadReceipt } from '../services/api';
+import { useTheme } from '../context/ThemeContext';
 
 const UploadReceipt = ({ onUploadSuccess }) => {
+  const { isDark } = useTheme();
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -76,12 +78,14 @@ const UploadReceipt = ({ onUploadSuccess }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">Upload Receipt</h2>
+    <div className={`rounded-lg shadow-md p-4 sm:p-6 transition-colors ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
+      <h2 className={`text-xl sm:text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Upload Receipt</h2>
       
       <div
-        className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-          dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+        className={`border-2 border-dashed rounded-lg p-6 sm:p-8 text-center transition-colors ${
+          dragActive 
+            ? isDark ? 'border-blue-500 bg-blue-900/20' : 'border-blue-500 bg-blue-50'
+            : isDark ? 'border-slate-600 hover:border-slate-500' : 'border-gray-300 hover:border-gray-400'
         }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -93,14 +97,14 @@ const UploadReceipt = ({ onUploadSuccess }) => {
             <img 
               src={preview} 
               alt="Receipt preview" 
-              className="max-h-64 mx-auto rounded shadow-sm"
+              className="max-h-48 sm:max-h-64 mx-auto rounded shadow-sm"
             />
             <button
               onClick={() => {
                 setFile(null);
                 setPreview(null);
               }}
-              className="text-red-600 hover:text-red-700 text-sm"
+              className="text-red-600 hover:text-red-700 text-sm font-medium"
             >
               Remove
             </button>
@@ -108,7 +112,7 @@ const UploadReceipt = ({ onUploadSuccess }) => {
         ) : (
           <div className="space-y-4">
             <svg
-              className="mx-auto h-12 w-12 text-gray-400"
+              className={`mx-auto h-10 w-10 sm:h-12 sm:w-12 ${isDark ? 'text-slate-500' : 'text-gray-400'}`}
               stroke="currentColor"
               fill="none"
               viewBox="0 0 48 48"
@@ -120,7 +124,7 @@ const UploadReceipt = ({ onUploadSuccess }) => {
                 strokeLinejoin="round"
               />
             </svg>
-            <div className="text-gray-600">
+            <div className={isDark ? 'text-slate-300' : 'text-gray-600'}>
               <label htmlFor="file-upload" className="cursor-pointer">
                 <span className="text-blue-600 hover:text-blue-700 font-medium">
                   Click to upload
@@ -135,13 +139,13 @@ const UploadReceipt = ({ onUploadSuccess }) => {
                 onChange={(e) => handleFileChange(e.target.files[0])}
               />
             </div>
-            <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+            <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>PNG, JPG, GIF up to 10MB</p>
           </div>
         )}
       </div>
 
       {error && (
-        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+        <div className={`mt-4 p-3 border rounded text-sm ${isDark ? 'bg-red-900/20 border-red-800 text-red-400' : 'bg-red-50 border-red-200 text-red-700'}`}>
           {error}
         </div>
       )}
@@ -149,10 +153,10 @@ const UploadReceipt = ({ onUploadSuccess }) => {
       {uploading && (
         <div className="mt-4">
           <div className="flex justify-between mb-1">
-            <span className="text-sm font-medium text-gray-700">Uploading...</span>
-            <span className="text-sm font-medium text-gray-700">{progress}%</span>
+            <span className={`text-sm font-medium ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Uploading...</span>
+            <span className={`text-sm font-medium ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>{progress}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
+          <div className={`w-full rounded-full h-2.5 ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`}>
             <div
               className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
@@ -164,7 +168,7 @@ const UploadReceipt = ({ onUploadSuccess }) => {
       <button
         onClick={handleUpload}
         disabled={!file || uploading}
-        className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
+        className={`mt-4 w-full py-2 px-4 rounded-lg font-medium transition-colors ${!file || uploading ? isDark ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
       >
         {uploading ? 'Processing...' : 'Upload & Process Receipt'}
       </button>
