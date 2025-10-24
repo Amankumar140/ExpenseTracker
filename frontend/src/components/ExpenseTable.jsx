@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { updateExpense, deleteExpense } from '../services/api';
+import { useTheme } from '../context/ThemeContext';
 
 const ExpenseTable = ({ expenses, onUpdate, onDelete }) => {
+  const { isDark } = useTheme();
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [sortField, setSortField] = useState('createdAt');
@@ -75,19 +77,19 @@ const ExpenseTable = ({ expenses, onUpdate, onDelete }) => {
     });
 
   const SortIcon = ({ field }) => {
-    if (sortField !== field) return <span className="text-gray-400">↕</span>;
+    if (sortField !== field) return <span className={isDark ? 'text-slate-600' : 'text-gray-400'}>↕</span>;
     return sortOrder === 'asc' ? <span>↑</span> : <span>↓</span>;
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold text-gray-800">Expenses</h2>
+    <div className={`rounded-lg shadow-md p-4 sm:p-6 transition-colors ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3">
+        <h2 className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Expenses</h2>
         <div className="flex gap-2">
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            className={`border rounded-lg px-3 py-2 text-sm transition-colors ${isDark ? 'bg-slate-700 border-slate-600 text-slate-200' : 'border-gray-300 text-gray-800'}`}
           >
             <option value="">All Categories</option>
             {categories.map(cat => (
@@ -98,103 +100,103 @@ const ExpenseTable = ({ expenses, onUpdate, onDelete }) => {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className={`min-w-full divide-y ${isDark ? 'divide-slate-700' : 'divide-gray-200'}`}>
+          <thead className={isDark ? 'bg-slate-700' : 'bg-gray-50'}>
             <tr>
               <th 
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                className={`px-3 sm:px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer transition-colors ${isDark ? 'text-slate-300 hover:bg-slate-600' : 'text-gray-500 hover:bg-gray-100'}`}
                 onClick={() => handleSort('merchant')}
               >
                 Merchant <SortIcon field="merchant" />
               </th>
               <th 
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                className={`px-3 sm:px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer transition-colors ${isDark ? 'text-slate-300 hover:bg-slate-600' : 'text-gray-500 hover:bg-gray-100'}`}
                 onClick={() => handleSort('date')}
               >
                 Date <SortIcon field="date" />
               </th>
               <th 
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                className={`px-3 sm:px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer transition-colors ${isDark ? 'text-slate-300 hover:bg-slate-600' : 'text-gray-500 hover:bg-gray-100'}`}
                 onClick={() => handleSort('total')}
               >
                 Total <SortIcon field="total" />
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className={`px-3 sm:px-4 py-3 text-left text-xs font-medium uppercase ${isDark ? 'text-slate-300' : 'text-gray-500'}`}>
                 Tax
               </th>
               <th 
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                className={`px-3 sm:px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer transition-colors ${isDark ? 'text-slate-300 hover:bg-slate-600' : 'text-gray-500 hover:bg-gray-100'}`}
                 onClick={() => handleSort('category')}
               >
                 Category <SortIcon field="category" />
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className={`px-3 sm:px-4 py-3 text-left text-xs font-medium uppercase ${isDark ? 'text-slate-300' : 'text-gray-500'}`}>
                 Confidence
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className={`px-3 sm:px-4 py-3 text-left text-xs font-medium uppercase ${isDark ? 'text-slate-300' : 'text-gray-500'}`}>
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className={`divide-y ${isDark ? 'divide-slate-700' : 'divide-gray-200'}`}>
             {sortedAndFilteredExpenses.length === 0 ? (
               <tr>
-                <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
+                <td colSpan="7" className={`px-4 py-8 text-center ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
                   No expenses found. Upload a receipt to get started!
                 </td>
               </tr>
             ) : (
               sortedAndFilteredExpenses.map((expense) => (
-                <tr key={expense._id} className="hover:bg-gray-50">
+                <tr key={expense._id} className={`transition-colors ${isDark ? 'hover:bg-slate-700' : 'hover:bg-gray-50'}`}>
                   {editingId === expense._id ? (
                     <>
-                      <td className="px-4 py-3">
+                      <td className="px-3 sm:px-4 py-3">
                         <input
                           type="text"
                           value={editForm.merchant}
                           onChange={(e) => setEditForm({...editForm, merchant: e.target.value})}
-                          className="border border-gray-300 rounded px-2 py-1 w-full text-sm"
+                          className={`border rounded px-2 py-1 w-full text-sm transition-colors ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-gray-300 text-gray-900'}`}
                         />
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 sm:px-4 py-3">
                         <input
                           type="text"
                           value={editForm.date}
                           onChange={(e) => setEditForm({...editForm, date: e.target.value})}
-                          className="border border-gray-300 rounded px-2 py-1 w-full text-sm"
+                          className={`border rounded px-2 py-1 w-full text-sm transition-colors ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-gray-300 text-gray-900'}`}
                         />
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 sm:px-4 py-3">
                         <input
                           type="number"
                           step="0.01"
                           value={editForm.total}
                           onChange={(e) => setEditForm({...editForm, total: parseFloat(e.target.value)})}
-                          className="border border-gray-300 rounded px-2 py-1 w-full text-sm"
+                          className={`border rounded px-2 py-1 w-full text-sm transition-colors ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-gray-300 text-gray-900'}`}
                         />
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 sm:px-4 py-3">
                         <input
                           type="number"
                           step="0.01"
                           value={editForm.tax}
                           onChange={(e) => setEditForm({...editForm, tax: parseFloat(e.target.value)})}
-                          className="border border-gray-300 rounded px-2 py-1 w-full text-sm"
+                          className={`border rounded px-2 py-1 w-full text-sm transition-colors ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-gray-300 text-gray-900'}`}
                         />
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 sm:px-4 py-3">
                         <select
                           value={editForm.category}
                           onChange={(e) => setEditForm({...editForm, category: e.target.value})}
-                          className="border border-gray-300 rounded px-2 py-1 w-full text-sm"
+                          className={`border rounded px-2 py-1 w-full text-sm transition-colors ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-gray-300 text-gray-900'}`}
                         >
                           {categories.map(cat => (
                             <option key={cat} value={cat}>{cat}</option>
                           ))}
                         </select>
                       </td>
-                      <td className="px-4 py-3"></td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 sm:px-4 py-3"></td>
+                      <td className="px-3 sm:px-4 py-3">
                         <button
                           onClick={() => handleSave(expense._id)}
                           className="text-green-600 hover:text-green-700 mr-2 text-sm font-medium"
@@ -203,7 +205,7 @@ const ExpenseTable = ({ expenses, onUpdate, onDelete }) => {
                         </button>
                         <button
                           onClick={() => setEditingId(null)}
-                          className="text-gray-600 hover:text-gray-700 text-sm font-medium"
+                          className={`text-sm font-medium ${isDark ? 'text-slate-400 hover:text-slate-300' : 'text-gray-600 hover:text-gray-700'}`}
                         >
                           Cancel
                         </button>
@@ -211,24 +213,24 @@ const ExpenseTable = ({ expenses, onUpdate, onDelete }) => {
                     </>
                   ) : (
                     <>
-                      <td className="px-4 py-3 text-sm text-gray-900">{expense.merchant}</td>
-                      <td className="px-4 py-3 text-sm text-gray-900">{expense.date}</td>
-                      <td className="px-4 py-3 text-sm text-gray-900">${expense.total.toFixed(2)}</td>
-                      <td className="px-4 py-3 text-sm text-gray-900">${(expense.tax || 0).toFixed(2)}</td>
-                      <td className="px-4 py-3">
-                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                      <td className={`px-3 sm:px-4 py-3 text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{expense.merchant}</td>
+                      <td className={`px-3 sm:px-4 py-3 text-sm ${isDark ? 'text-slate-300' : 'text-gray-900'}`}>{expense.date}</td>
+                      <td className={`px-3 sm:px-4 py-3 text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>₹{expense.total.toFixed(2)}</td>
+                      <td className={`px-3 sm:px-4 py-3 text-sm ${isDark ? 'text-slate-300' : 'text-gray-900'}`}>₹{(expense.tax || 0).toFixed(2)}</td>
+                      <td className="px-3 sm:px-4 py-3">
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${isDark ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'}`}>
                           {expense.category}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
+                      <td className={`px-3 sm:px-4 py-3 text-sm ${isDark ? 'text-slate-300' : 'text-gray-900'}`}>
                         <span className={`font-medium ${expense.confidence >= 70 ? 'text-green-600' : expense.confidence >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
                           {expense.confidence}%
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 sm:px-4 py-3">
                         <button
                           onClick={() => handleEdit(expense)}
-                          className="text-blue-600 hover:text-blue-700 mr-3 text-sm font-medium"
+                          className="text-blue-600 hover:text-blue-700 mr-2 sm:mr-3 text-sm font-medium"
                         >
                           Edit
                         </button>
