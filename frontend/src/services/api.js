@@ -9,6 +9,61 @@ const api = axios.create({
   },
 });
 
+// Token management
+export const setAuthToken = (token) => {
+  if (token) {
+    localStorage.setItem('token', token);
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  } else {
+    localStorage.removeItem('token');
+    delete api.defaults.headers.common['Authorization'];
+  }
+};
+
+// Initialize token from localStorage
+const token = localStorage.getItem('token');
+if (token) {
+  api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+}
+
+// Response interceptor for handling auth errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      setAuthToken(null);
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Auth API calls
+export const signup = async (name, email, password) => {
+  const response = await api.post('/auth/signup', { name, email, password });
+  if (response.data.token) {
+    setAuthToken(response.data.token);
+  }
+  return response.data;
+};
+
+export const signin = async (email, password) => {
+  const response = await api.post('/auth/signin', { email, password });
+  if (response.data.token) {
+    setAuthToken(response.data.token);
+  }
+  return response.data;
+};
+
+export const getCurrentUser = async () => {
+  const response = await api.get('/auth/me');
+  return response.data;
+};
+
+export const logout = () => {
+  setAuthToken(null);
+};
+
 // Upload receipt
 export const uploadReceipt = async (file, onProgress) => {
   const formData = new FormData();
@@ -52,14 +107,15 @@ export const deleteExpense = async (id) => {
 };
 
 // Get analytics
-export const getAnalytics = async () => {
-  const response = await api.get('/expenses/analytics/summary');
+export const getAnalytics = async (params = {}) => {
+  const response = await api.get('/expenses/analytics/summary', { params });
   return response.data;
 };
 
 // Export to CSV
-export const exportToCSV = async () => {
+export const exportToCSV = async (params = {}) => {
   const response = await api.get('/expenses/export/csv', {
+    params,
     responseType: 'blob',
   });
   
@@ -67,7 +123,8 @@ export const exportToCSV = async () => {
   const url = window.URL.createObjectURL(new Blob([response.data]));
   const link = document.createElement('a');
   link.href = url;
-  link.setAttribute('download', `expenses-${new Date().toISOString().split('T')[0]}.csv`);
+  const yearSuffix = params.year && params.year !== 'all' ? `-${params.year}` : '';
+  link.setAttribute('download', `expenses${yearSuffix}-${new Date().toISOString().split('T')[0]}.csv`);
   document.body.appendChild(link);
   link.click();
   link.remove();
