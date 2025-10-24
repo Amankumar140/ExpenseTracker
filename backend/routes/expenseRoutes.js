@@ -28,6 +28,7 @@ router.post('/upload', upload.single('receipt'), async (req, res) => {
 
     // Create expense document
     const expense = new Expense({
+      userId: req.user._id,
       merchant: parsedData.merchant || 'Unknown',
       date: parsedData.date || new Date().toLocaleDateString(),
       total: parsedData.total || 0,
@@ -55,9 +56,9 @@ router.post('/upload', upload.single('receipt'), async (req, res) => {
 // GET /api/expenses - Get all expenses with optional filters
 router.get('/', async (req, res) => {
   try {
-    const { category, startDate, endDate, minAmount, maxAmount, sort = '-createdAt' } = req.query;
+    const { category, startDate, endDate, minAmount, maxAmount, year, sort = '-createdAt' } = req.query;
     
-    const filter = {};
+    const filter = { userId: req.user._id };
     
     if (category) {
       filter.category = category;
@@ -69,7 +70,15 @@ router.get('/', async (req, res) => {
       if (maxAmount) filter.total.$lte = parseFloat(maxAmount);
     }
 
-    const expenses = await Expense.find(filter).sort(sort);
+    let expenses = await Expense.find(filter).sort(sort);
+    
+    // Filter by year if specified
+    if (year && year !== 'all') {
+      const selectedYear = parseInt(year);
+      expenses = expenses.filter(expense => {
+        return getExpenseYear(expense) === selectedYear;
+      });
+    }
     
     res.json({
       count: expenses.length,
@@ -84,7 +93,7 @@ router.get('/', async (req, res) => {
 // GET /api/expenses/:id - Get single expense
 router.get('/:id', async (req, res) => {
   try {
-    const expense = await Expense.findById(req.params.id);
+    const expense = await Expense.findOne({ _id: req.params.id, userId: req.user._id });
     
     if (!expense) {
       return res.status(404).json({ message: 'Expense not found' });
@@ -102,7 +111,7 @@ router.put('/:id', async (req, res) => {
   try {
     const { merchant, date, total, tax, category, notes } = req.body;
     
-    const expense = await Expense.findById(req.params.id);
+    const expense = await Expense.findOne({ _id: req.params.id, userId: req.user._id });
     
     if (!expense) {
       return res.status(404).json({ message: 'Expense not found' });
@@ -138,7 +147,7 @@ router.put('/:id', async (req, res) => {
 // DELETE /api/expenses/:id - Delete expense
 router.delete('/:id', async (req, res) => {
   try {
-    const expense = await Expense.findByIdAndDelete(req.params.id);
+    const expense = await Expense.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
     
     if (!expense) {
       return res.status(404).json({ message: 'Expense not found' });
@@ -151,10 +160,56 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// Helper function to extract year from expense
+const getExpenseYear = (expense) => {
+  let dateObj;
+  try {
+    if (expense.date) {
+      // Try to parse the date string
+      dateObj = new Date(expense.date);
+      // If invalid date, fall back to createdAt
+      if (isNaN(dateObj.getTime())) {
+        dateObj = new Date(expense.createdAt);
+      }
+    } else {
+      dateObj = new Date(expense.createdAt);
+    }
+  } catch (e) {
+    dateObj = new Date(expense.createdAt);
+  }
+  return dateObj.getFullYear();
+};
+
 // GET /api/expenses/analytics/summary - Get analytics data
 router.get('/analytics/summary', async (req, res) => {
   try {
-    const expenses = await Expense.find();
+    const { year } = req.query;
+    
+    // Get all expenses for the user to extract available years
+    const allExpenses = await Expense.find({ userId: req.user._id }).sort('-createdAt');
+    
+    // Extract unique years from expenses (based on bill date)
+    const yearsSet = new Set();
+    allExpenses.forEach(expense => {
+      const expenseYear = getExpenseYear(expense);
+      yearsSet.add(expenseYear);
+    });
+    const availableYears = Array.from(yearsSet).sort((a, b) => b - a);
+    
+    console.log('Available years from expenses:', availableYears);
+    console.log('Selected year filter:', year);
+    
+    // Filter expenses by year if specified
+    let expenses = allExpenses;
+    if (year && year !== 'all') {
+      const selectedYear = parseInt(year);
+      expenses = allExpenses.filter(expense => {
+        return getExpenseYear(expense) === selectedYear;
+      });
+      console.log(`Filtered to ${expenses.length} expenses for year ${selectedYear}`);
+    } else {
+      console.log(`Showing all ${expenses.length} expenses`);
+    }
     
     // Category breakdown
     const categoryBreakdown = {};
@@ -166,10 +221,28 @@ router.get('/analytics/summary', async (req, res) => {
       categoryBreakdown[expense.category].count += 1;
     });
 
-    // Monthly spending
+    // Monthly spending based on bill date
     const monthlySpending = {};
     expenses.forEach(expense => {
-      const month = new Date(expense.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+      // Try to parse the date from the expense.date field
+      let dateObj;
+      try {
+        // Handle various date formats
+        if (expense.date) {
+          dateObj = new Date(expense.date);
+          // If invalid date, fall back to createdAt
+          if (isNaN(dateObj.getTime())) {
+            dateObj = new Date(expense.createdAt);
+          }
+        } else {
+          dateObj = new Date(expense.createdAt);
+        }
+      } catch (e) {
+        dateObj = new Date(expense.createdAt);
+      }
+      
+      // Format: "MMM YYYY" (e.g., "Oct 2025")
+      const month = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
       if (!monthlySpending[month]) {
         monthlySpending[month] = 0;
       }
@@ -181,9 +254,20 @@ router.get('/analytics/summary', async (req, res) => {
     const averageExpense = expenses.length > 0 ? totalSpent / expenses.length : 0;
     const totalTax = expenses.reduce((sum, exp) => sum + (exp.tax || 0), 0);
 
+    // Sort monthly spending by date (chronological order)
+    const sortedMonthlySpending = Object.fromEntries(
+      Object.entries(monthlySpending).sort((a, b) => {
+        // Parse month format "Oct 2025" to proper date for sorting
+        const dateA = new Date(a[0]);
+        const dateB = new Date(b[0]);
+        return dateA - dateB;
+      })
+    );
+
     res.json({
       categoryBreakdown,
-      monthlySpending,
+      monthlySpending: sortedMonthlySpending,
+      availableYears,
       stats: {
         totalExpenses: expenses.length,
         totalSpent: totalSpent.toFixed(2),
@@ -200,7 +284,16 @@ router.get('/analytics/summary', async (req, res) => {
 // GET /api/expenses/export/csv - Export expenses as CSV
 router.get('/export/csv', async (req, res) => {
   try {
-    const expenses = await Expense.find().sort('-createdAt');
+    const { year } = req.query;
+    let expenses = await Expense.find({ userId: req.user._id }).sort('-createdAt');
+    
+    // Filter by year if specified
+    if (year && year !== 'all') {
+      const selectedYear = parseInt(year);
+      expenses = expenses.filter(expense => {
+        return getExpenseYear(expense) === selectedYear;
+      });
+    }
     
     const fields = ['merchant', 'date', 'total', 'tax', 'category', 'confidence', 'categoryConfidence', 'notes', 'createdAt'];
     const opts = { fields };

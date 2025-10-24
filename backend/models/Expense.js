@@ -1,6 +1,11 @@
 import mongoose from 'mongoose';
 
 const expenseSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   merchant: {
     type: String,
     required: false,
@@ -72,8 +77,8 @@ const expenseSchema = new mongoose.Schema({
 });
 
 // Index for faster queries
-expenseSchema.index({ category: 1, createdAt: -1 });
-expenseSchema.index({ createdAt: -1 });
+expenseSchema.index({ userId: 1, category: 1, createdAt: -1 });
+expenseSchema.index({ userId: 1, createdAt: -1 });
 
 const Expense = mongoose.model('Expense', expenseSchema);
 
