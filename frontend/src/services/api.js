@@ -31,8 +31,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      setAuthToken(null);
-      window.location.href = '/login';
+      // Only redirect if not already on login/signup page and not during login/signup attempt
+      const isAuthPage = window.location.pathname === '/login' || window.location.pathname === '/signup';
+      const isAuthEndpoint = error.config?.url?.includes('/auth/signin') || error.config?.url?.includes('/auth/signup');
+      
+      if (!isAuthPage && !isAuthEndpoint) {
+        setAuthToken(null);
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -103,6 +109,12 @@ export const updateExpense = async (id, data) => {
 // Delete expense
 export const deleteExpense = async (id) => {
   const response = await api.delete(`/expenses/${id}`);
+  return response.data;
+};
+
+// Get dashboard stats
+export const getDashboardStats = async () => {
+  const response = await api.get('/expenses/dashboard/stats');
   return response.data;
 };
 

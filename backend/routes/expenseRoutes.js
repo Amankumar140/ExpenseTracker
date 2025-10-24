@@ -180,6 +180,52 @@ const getExpenseYear = (expense) => {
   return dateObj.getFullYear();
 };
 
+// GET /api/expenses/dashboard/stats - Get dashboard quick stats
+router.get('/dashboard/stats', async (req, res) => {
+  try {
+    const expenses = await Expense.find({ userId: req.user._id }).sort('-createdAt');
+    
+    // Calculate quick stats
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    // This month's expenses
+    const thisMonthExpenses = expenses.filter(expense => {
+      let expDate;
+      try {
+        expDate = expense.date ? new Date(expense.date) : new Date(expense.createdAt);
+        if (isNaN(expDate.getTime())) {
+          expDate = new Date(expense.createdAt);
+        }
+      } catch (e) {
+        expDate = new Date(expense.createdAt);
+      }
+      return expDate.getMonth() === currentMonth && expDate.getFullYear() === currentYear;
+    });
+    
+    const thisMonthTotal = thisMonthExpenses.reduce((sum, exp) => sum + exp.total, 0);
+    const totalSpent = expenses.reduce((sum, exp) => sum + exp.total, 0);
+    const lastExpense = expenses.length > 0 ? expenses[0] : null;
+    
+    res.json({
+      totalExpenses: expenses.length,
+      thisMonthTotal: thisMonthTotal.toFixed(2),
+      totalSpent: totalSpent.toFixed(2),
+      thisMonthCount: thisMonthExpenses.length,
+      lastExpense: lastExpense ? {
+        merchant: lastExpense.merchant,
+        total: lastExpense.total,
+        date: lastExpense.date,
+        category: lastExpense.category
+      } : null
+    });
+  } catch (error) {
+    console.error('Dashboard stats error:', error);
+    res.status(500).json({ message: 'Failed to fetch dashboard stats', error: error.message });
+  }
+});
+
 // GET /api/expenses/analytics/summary - Get analytics data
 router.get('/analytics/summary', async (req, res) => {
   try {
