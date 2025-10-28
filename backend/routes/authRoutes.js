@@ -94,7 +94,7 @@ router.post('/signin', validate(signinSchema), async (req, res) => {
     // Find user
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return res.status(401).json({ message: 'User not found' });
     }
 
     // Check if user signed up with Google
@@ -107,7 +107,7 @@ router.post('/signin', validate(signinSchema), async (req, res) => {
     // Verify password
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return res.status(401).json({ message: 'Incorrect password' });
     }
 
     // Generate token
