@@ -71,6 +71,21 @@ const expenseSchema = new mongoose.Schema({
   notes: {
     type: String,
     default: ''
+  },
+  mlCategory: {
+    type: String,
+    default: null
+  },
+  mlConfidence: {
+    type: Number,
+    min: 0,
+    max: 1,
+    default: null
+  },
+  categorizationSource: {
+    type: String,
+    enum: ['ml', 'keyword'],
+    default: 'keyword'
   }
 }, {
   timestamps: true
