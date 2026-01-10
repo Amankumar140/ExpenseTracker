@@ -63,51 +63,116 @@ export const parseExpenseData = (text) => {
     }
   }
 
-  // Extract total (look for patterns like "Total: $XX.XX", "TOTAL XX.XX", etc.)
-  const totalPatterns = [
-    /total[:\s]*\$?(\d+\.\d{2})/i,
-    /amount[:\s]*\$?(\d+\.\d{2})/i,
-    /\$(\d+\.\d{2})\s*total/i
+  // ---------------------------------------------------------------
+  // Helper: parse a currency string like "₹1,234.50" or "$50" to float
+  // ---------------------------------------------------------------
+  const parseCurrency = (str) => {
+    if (!str) return NaN;
+    // Remove currency symbols and commas, keep digits and dots
+    const cleaned = str.replace(/[₹$£€,\s]/g, '');
+    return parseFloat(cleaned);
+  };
+
+  // Regex to match a monetary value: optional symbol, digits with optional commas, optional decimals
+  const currencyValuePattern = /[₹$£€]?\s*(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/;
+
+  // ---------------------------------------------------------------
+  // Extract total — prioritized keyword matching
+  // ---------------------------------------------------------------
+  // Priority 1: High-confidence keywords (grand total, net amount, etc.)
+  const highPriorityTotalPatterns = [
+    /grand\s*total\s*[:\-]?\s*[₹$£€]?\s*(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/i,
+    /net\s*amount\s*[:\-]?\s*[₹$£€]?\s*(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/i,
+    /final\s*amount\s*[:\-]?\s*[₹$£€]?\s*(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/i,
+    /bill\s*amount\s*[:\-]?\s*[₹$£€]?\s*(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/i,
+    /amount\s*due\s*[:\-]?\s*[₹$£€]?\s*(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/i,
+    /amount\s*payable\s*[:\-]?\s*[₹$£€]?\s*(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/i,
   ];
-  
+
+  // Priority 2: Standard total keywords
+  const standardTotalPatterns = [
+    /total\s*[:\-]?\s*[₹$£€]?\s*(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/i,
+    /amount\s*[:\-]?\s*[₹$£€]?\s*(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/i,
+    /[₹$£€]\s*(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)\s*total/i,
+    /bal(?:ance)?\s*(?:due)?\s*[:\-]?\s*[₹$£€]?\s*(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/i,
+  ];
+
+  // Try high-priority patterns first
   for (const line of lines) {
-    for (const pattern of totalPatterns) {
+    for (const pattern of highPriorityTotalPatterns) {
       const match = line.match(pattern);
       if (match) {
-        data.total = parseFloat(match[1]);
-        break;
+        const val = parseCurrency(match[1]);
+        if (!isNaN(val) && val > 0) {
+          data.total = val;
+          break;
+        }
       }
     }
     if (data.total) break;
   }
 
-  // If total not found, look for largest dollar amount
+  // Try standard patterns if no high-priority match
   if (!data.total) {
-    const amounts = [];
+    const standardMatches = [];
     for (const line of lines) {
-      const amountMatches = line.match(/\$?(\d+\.\d{2})/g);
-      if (amountMatches) {
-        amounts.push(...amountMatches.map(a => parseFloat(a.replace('$', ''))));
+      for (const pattern of standardTotalPatterns) {
+        const match = line.match(pattern);
+        if (match) {
+          const val = parseCurrency(match[1]);
+          if (!isNaN(val) && val > 0) {
+            standardMatches.push(val);
+          }
+        }
       }
     }
-    if (amounts.length > 0) {
-      data.total = Math.max(...amounts);
+    // Pick the largest keyword-matched total (most likely the final total)
+    if (standardMatches.length > 0) {
+      data.total = Math.max(...standardMatches);
     }
   }
 
-  // Extract tax (look for patterns like "Tax: $X.XX", "TAX X.XX", etc.)
+  // Fallback: extract ALL currency amounts and pick the largest reasonable one
+  if (!data.total) {
+    const allAmounts = [];
+    const amountPattern = /[₹$£€]\s*(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/g;
+    const plainAmountPattern = /(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?)/g;
+
+    for (const line of lines) {
+      // Currency-prefixed amounts
+      let match;
+      while ((match = amountPattern.exec(line)) !== null) {
+        const val = parseCurrency(match[1]);
+        if (!isNaN(val) && val > 0) allAmounts.push(val);
+      }
+      // Comma-formatted amounts without currency symbol (e.g., 1,234.50)
+      while ((match = plainAmountPattern.exec(line)) !== null) {
+        const val = parseCurrency(match[1]);
+        if (!isNaN(val) && val > 0) allAmounts.push(val);
+      }
+    }
+
+    if (allAmounts.length > 0) {
+      data.total = Math.max(...allAmounts);
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Extract tax — flexible patterns
+  // ---------------------------------------------------------------
   const taxPatterns = [
-    /tax[:\s]*\$?(\d+\.\d{2})/i,
-    /vat[:\s]*\$?(\d+\.\d{2})/i,
-    /gst[:\s]*\$?(\d+\.\d{2})/i
+    /(?:tax|vat|gst|cgst|sgst|igst|service\s*tax)\s*[:\-]?\s*[₹$£€]?\s*(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/i,
   ];
   
   for (const line of lines) {
     for (const pattern of taxPatterns) {
       const match = line.match(pattern);
       if (match) {
-        data.tax = parseFloat(match[1]);
-        break;
+        const val = parseCurrency(match[1]);
+        if (!isNaN(val) && val > 0) {
+          data.tax = val;
+          break;
+        }
       }
     }
     if (data.tax) break;
