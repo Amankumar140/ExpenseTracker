@@ -3,12 +3,20 @@ import Expense from '../models/Expense.js';
 import upload from '../middleware/upload.js';
 import { performOCR, parseExpenseData, calculateConfidence } from '../services/ocrService.js';
 import { categorizeExpense, manualCategorize } from '../services/categorizationService.js';
+import { predictCategory } from '../services/mlService.js';
 import { Parser } from 'json2csv';
 
 const router = express.Router();
 
 // POST /api/expenses/upload - Upload and process receipt
-router.post('/upload', upload.single('receipt'), async (req, res) => {
+router.post('/upload', (req, res, next) => {
+  upload.single('receipt')(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ message: err.message || 'File upload failed' });
+    }
+    next();
+  });
+}, async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
@@ -20,8 +28,24 @@ router.post('/upload', upload.single('receipt'), async (req, res) => {
     // Parse expense data
     const parsedData = parseExpenseData(text);
     
-    // Categorize expense
-    const categoryResult = categorizeExpense(parsedData.merchant, text);
+    // Categorize expense — ML-first, keyword fallback only if ML unavailable
+    const mlPrediction = await predictCategory(text);
+    let categoryResult;
+    let categorizationSource;
+
+    if (mlPrediction) {
+      // ML prediction available — use it as primary
+      categoryResult = {
+        category: mlPrediction.category,
+        confidence: Math.round(mlPrediction.confidence * 100),
+        matchedKeywords: ['ml-predicted'],
+      };
+      categorizationSource = 'ml';
+    } else {
+      // ML service offline or failed — fallback to keyword rules
+      categoryResult = categorizeExpense(parsedData.merchant, text);
+      categorizationSource = 'keyword';
+    }
     
     // Calculate overall confidence
     const overallConfidence = calculateConfidence(parsedData, ocrConfidence);
@@ -38,7 +62,10 @@ router.post('/upload', upload.single('receipt'), async (req, res) => {
       categoryConfidence: categoryResult.confidence,
       matchedKeywords: categoryResult.matchedKeywords,
       imagePath: `/uploads/${req.file.filename}`,
-      rawText: text
+      rawText: text,
+      mlCategory: mlPrediction?.category || null,
+      mlConfidence: mlPrediction?.confidence || null,
+      categorizationSource
     });
 
     await expense.save();
