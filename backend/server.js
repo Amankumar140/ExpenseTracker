@@ -8,6 +8,7 @@ import expenseRoutes from './routes/expenseRoutes.js';
 import passport from 'passport';
 import authRoutes from './routes/authRoutes.js'; // Import your auth routes
 import { authenticate } from './middleware/auth.js'
+import { checkMLHealth } from './services/mlService.js';
 // ES Module fix for __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -56,4 +57,9 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+
+  // Check ML service health on startup (non-blocking)
+  checkMLHealth().catch(() => {
+    console.warn('\x1b[33m⚠ ML Service Offline — Using fallback categorization\x1b[0m');
+  });
 });
