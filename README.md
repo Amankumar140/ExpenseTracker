@@ -1,296 +1,196 @@
-# Expense Auto-Categorizer
+# ExpenseTrack — AI-Powered Expense Management
 
-A full-stack MERN application that uses OCR to automatically process receipt images, extract expense data, categorize transactions using keyword-based rules, and provide analytics with interactive charts.
+A full-stack MERN application with integrated **ML microservice** that uses OCR to process receipt images, extract expense data, auto-categorize transactions using both AI/ML and keyword-based rules, and provide analytics with interactive charts.
 
-## Features
+## ✨ Features
 
-- 📸 **Receipt Upload**: Drag-and-drop or click to upload receipt images
-- 🔍 **OCR Processing**: Automatic text extraction using Tesseract.js
-- 🏷️ **Auto-Categorization**: Smart keyword-based expense categorization
-- ✏️ **CRUD Operations**: Create, read, update, and delete expenses
-- 📊 **Analytics Dashboard**: Interactive charts with Recharts (pie charts, bar charts)
-- 📈 **Confidence Scoring**: Shows extraction and categorization confidence levels
-- 📥 **CSV Export**: Export all expenses to CSV format
-- 🎨 **Modern UI**: Responsive design with Tailwind CSS
+- 📸 **Smart Receipt Upload** — Drag-and-drop with animated multi-step progress (Upload → OCR → Categorize)
+- 🔍 **OCR Processing** — Automatic text extraction using Tesseract.js with confidence scoring
+- 🤖 **ML Categorization** — Python-based ML microservice (scikit-learn) with keyword fallback
+- 🏷️ **Auto-Categorization** — 12 smart categories with dual-source confidence tracking
+- ✏️ **CRUD Operations** — Create, read, update, and delete expenses with inline editing
+- 📊 **Visual Analytics** — Donut charts, gradient bar charts, category breakdowns, year filtering
+- 📈 **Confidence Scoring** — Visual progress bars showing extraction and categorization confidence
+- 📥 **CSV Export** — Export all expenses to CSV with year filtering
+- 🔐 **Auth System** — JWT-based authentication with protected routes
+- 🌙 **Dark Mode** — Full dark/light theme with smooth transitions
+- 🎨 **Premium UI** — Glassmorphism, gradient accents, stagger animations, responsive mobile layouts
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-### Backend
-- **Node.js** & **Express**: Server and API
-- **MongoDB** & **Mongoose**: Database and ODM
-- **Tesseract.js**: OCR engine
-- **Multer**: File upload handling
-- **json2csv**: CSV export functionality
+### Backend (Node.js)
+| Technology | Purpose |
+|-----------|---------|
+| **Express.js** | REST API server |
+| **MongoDB + Mongoose** | Database & ODM |
+| **Tesseract.js** | OCR engine |
+| **JWT + bcrypt** | Authentication |
+| **Multer** | File upload handling |
+| **json2csv** | CSV export |
+| **Axios** | ML service communication |
 
-### Frontend
-- **React**: UI library
-- **Vite**: Build tool and dev server
-- **Axios**: HTTP client
-- **Recharts**: Chart library
-- **Tailwind CSS**: Styling
+### ML Microservice (Python)
+| Technology | Purpose |
+|-----------|---------|
+| **Flask** | API server |
+| **scikit-learn** | ML classification |
+| **TF-IDF Vectorizer** | Text feature extraction |
 
-## Project Structure
+### Frontend (React)
+| Technology | Purpose |
+|-----------|---------|
+| **React 19** | UI library |
+| **Vite** | Build tool & dev server |
+| **Tailwind CSS v4** | Styling |
+| **Recharts** | Charts & visualizations |
+| **Axios** | HTTP client |
+| **React Router v7** | Routing |
+
+## 📁 Project Structure
 
 ```
-expenseTracker/
+ExpenseTracker/
 ├── backend/
 │   ├── config/
-│   │   └── database.js          # MongoDB connection
+│   │   └── database.js              # MongoDB connection
 │   ├── middleware/
-│   │   └── upload.js             # Multer configuration
+│   │   ├── auth.js                  # JWT authentication middleware
+│   │   └── upload.js                # Multer configuration
 │   ├── models/
-│   │   └── Expense.js            # Mongoose schema
+│   │   ├── Expense.js               # Expense schema (with ML fields)
+│   │   └── User.js                  # User schema
 │   ├── routes/
-│   │   └── expenseRoutes.js      # API routes
+│   │   ├── authRoutes.js            # Auth endpoints
+│   │   └── expenseRoutes.js         # Expense CRUD + analytics + export
 │   ├── services/
-│   │   ├── ocrService.js         # OCR & parsing logic
-│   │   └── categorizationService.js  # Auto-categorization
-│   ├── uploads/                  # Uploaded receipt images
-│   ├── .env.example              # Environment variables template
-│   ├── package.json
-│   ├── render.yaml               # Render deployment config
-│   └── server.js                 # Express server
+│   │   ├── ocrService.js            # OCR & parsing logic
+│   │   ├── categorizationService.js # Keyword-based categorization
+│   │   └── mlService.js             # ML microservice client
+│   ├── server.js                    # Express server entry point
+│   └── package.json
+├── ml-service/
+│   ├── app.py                       # Flask API server
+│   ├── train.py                     # Model training script
+│   ├── predict.py                   # Prediction logic
+│   ├── model/                       # Trained model artifacts
+│   ├── requirements.txt             # Python dependencies
+│   └── Dockerfile                   # Container configuration
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── Analytics.jsx     # Analytics dashboard
-│   │   │   ├── ExpenseTable.jsx  # Expense list with edit/delete
-│   │   │   └── UploadReceipt.jsx # File upload component
+│   │   │   ├── Analytics.jsx        # Donut/bar charts, stat cards
+│   │   │   ├── ExpenseTable.jsx     # Sortable table with category badges
+│   │   │   ├── UploadReceipt.jsx    # Multi-step upload with progress
+│   │   │   ├── Navbar.jsx           # Glassmorphism authenticated navbar
+│   │   │   ├── PublicNavbar.jsx     # Public pages navbar
+│   │   │   └── DarkModeToggle.jsx   # Theme toggle
+│   │   ├── pages/
+│   │   │   ├── Home.jsx             # Landing page with feature cards
+│   │   │   ├── Dashboard.jsx        # Main dashboard with tabs
+│   │   │   ├── Login.jsx            # Auth with floating orbs
+│   │   │   ├── Signup.jsx           # Registration + password strength
+│   │   │   ├── About.jsx            # About page
+│   │   │   └── Contact.jsx          # Contact form
+│   │   ├── context/
+│   │   │   ├── AuthContext.jsx      # Authentication state
+│   │   │   └── ThemeContext.jsx      # Dark/light theme state
 │   │   ├── services/
-│   │   │   └── api.js            # API service layer
-│   │   ├── App.jsx               # Main app component
-│   │   ├── index.css             # Tailwind imports
+│   │   │   └── api.js               # API service layer
+│   │   ├── App.jsx
+│   │   ├── index.css                # Design system & animations
 │   │   └── main.jsx
-│   ├── .env.example              # Frontend env template
+│   ├── index.html
 │   ├── package.json
 │   ├── tailwind.config.js
-│   ├── vercel.json               # Vercel deployment config
 │   └── vite.config.js
 └── README.md
 ```
 
-## Installation
+## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js (v16 or higher)
-- MongoDB (local or MongoDB Atlas)
-- npm or yarn
+- Node.js (v16+)
+- Python 3.8+ (for ML service)
+- MongoDB (local or Atlas)
 
-### Backend Setup
+### 1. Backend Setup
 
-1. Navigate to the backend directory:
 ```bash
 cd backend
-```
-
-2. Install dependencies:
-```bash
 npm install
-```
-
-3. Create a `.env` file based on `.env.example`:
-```bash
 cp .env.example .env
-```
-
-4. Update the `.env` file with your MongoDB connection string:
-```env
-PORT=5000
-MONGODB_URI=mongodb://localhost:27017/expense-categorizer
-NODE_ENV=development
-FRONTEND_URL=http://localhost:5173
-```
-
-5. Start the backend server:
-```bash
+# Edit .env with your MongoDB URI and JWT secret
 npm run dev
 ```
 
-The backend will run on `http://localhost:5000`
+### 2. ML Microservice Setup
 
-### Frontend Setup
+```bash
+cd ml-service
+python -m venv venv
+venv\Scripts\activate       # Windows
+# source venv/bin/activate  # macOS/Linux
+pip install -r requirements.txt
+python train.py             # Train the model
+python app.py               # Start Flask server (port 5001)
+```
 
-1. Navigate to the frontend directory:
+### 3. Frontend Setup
+
 ```bash
 cd frontend
-```
-
-2. Install dependencies:
-```bash
 npm install
-```
-
-3. Create a `.env` file based on `.env.example`:
-```bash
 cp .env.example .env
-```
-
-4. Update the `.env` file:
-```env
-VITE_API_URL=http://localhost:5000/api
-```
-
-5. Start the development server:
-```bash
+# Edit .env: VITE_API_URL=http://localhost:5000/api
 npm run dev
 ```
 
-The frontend will run on `http://localhost:5173`
+## 🔌 API Endpoints
 
-## API Documentation
+### Authentication
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/signup` | Register new user |
+| POST | `/api/auth/signin` | Login user |
 
-### Endpoints
+### Expenses
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/expenses/upload` | Upload & process receipt |
+| GET | `/api/expenses` | List all expenses (with filters) |
+| GET | `/api/expenses/:id` | Get single expense |
+| PUT | `/api/expenses/:id` | Update expense |
+| DELETE | `/api/expenses/:id` | Delete expense |
+| GET | `/api/expenses/dashboard/stats` | Dashboard quick stats |
+| GET | `/api/expenses/analytics/summary` | Analytics data |
+| GET | `/api/expenses/export/csv` | Export as CSV |
 
-#### Upload Receipt
+### ML Service
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/predict` | Predict expense category |
+| GET | `/health` | Service health check |
+
+## 📂 Categories
+
+The system auto-categorizes expenses into 12 categories:
+
+`Food & Dining` · `Groceries` · `Transportation` · `Shopping` · `Entertainment` · `Healthcare` · `Utilities` · `Travel` · `Education` · `Personal Care` · `Insurance` · `Other`
+
+## 🏗️ Architecture
+
 ```
-POST /api/expenses/upload
-Content-Type: multipart/form-data
-
-Body: { receipt: <image file> }
-
-Response: {
-  message: "Receipt processed successfully",
-  expense: { ... }
-}
-```
-
-#### Get All Expenses
-```
-GET /api/expenses
-Query params: ?category=<category>&minAmount=<min>&maxAmount=<max>
-
-Response: {
-  count: <number>,
-  expenses: [ ... ]
-}
-```
-
-#### Get Single Expense
-```
-GET /api/expenses/:id
-
-Response: { expense object }
-```
-
-#### Update Expense
-```
-PUT /api/expenses/:id
-Content-Type: application/json
-
-Body: {
-  merchant: "...",
-  date: "...",
-  total: 123.45,
-  tax: 10.00,
-  category: "...",
-  notes: "..."
-}
-
-Response: {
-  message: "Expense updated successfully",
-  expense: { ... }
-}
+┌─────────────┐     ┌──────────────┐     ┌──────────────┐
+│   React UI  │────▶│  Express API │────▶│   MongoDB    │
+│  (Vite)     │     │  (Node.js)   │     │              │
+└─────────────┘     └──────┬───────┘     └──────────────┘
+                           │
+                    ┌──────▼───────┐
+                    │ ML Service   │
+                    │ (Flask/sklearn)│
+                    └──────────────┘
 ```
 
-#### Delete Expense
-```
-DELETE /api/expenses/:id
-
-Response: {
-  message: "Expense deleted successfully"
-}
-```
-
-#### Get Analytics
-```
-GET /api/expenses/analytics/summary
-
-Response: {
-  categoryBreakdown: { ... },
-  monthlySpending: { ... },
-  stats: { ... }
-}
-```
-
-#### Export CSV
-```
-GET /api/expenses/export/csv
-
-Response: CSV file download
-```
-
-## Categories
-
-The system auto-categorizes expenses into:
-- Food & Dining
-- Groceries
-- Transportation
-- Shopping
-- Entertainment
-- Healthcare
-- Utilities
-- Travel
-- Education
-- Personal Care
-- Insurance
-- Other
-
-## Deployment
-
-### Backend (Render)
-
-1. Push your code to GitHub
-2. Create a new Web Service on Render
-3. Connect your repository
-4. Set environment variables in Render dashboard
-5. Deploy
-
-### Frontend (Vercel)
-
-1. Push your code to GitHub
-2. Import project to Vercel
-3. Set `VITE_API_URL` environment variable
-4. Deploy
-
-## Development
-
-### Running Tests
-```bash
-# Backend
-cd backend
-npm test
-
-# Frontend
-cd frontend
-npm test
-```
-
-### Building for Production
-```bash
-# Frontend
-cd frontend
-npm run build
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
+## 📄 License
 
 This project is open source and available under the MIT License.
-
-## Acknowledgments
-
-- Tesseract.js for OCR functionality
-- Recharts for beautiful charts
-- Tailwind CSS for styling
-- The MERN stack community
-
-## Support
-
-For issues, questions, or contributions, please open an issue on GitHub.
