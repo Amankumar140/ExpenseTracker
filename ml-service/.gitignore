@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Model artifacts (regenerated via train.py)
+model/*.pkl
+
+# IDE
+.vscode/
+.idea/
+
+#data
+/data

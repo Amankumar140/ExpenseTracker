@@ -1,129 +1,65 @@
-"""
-FastAPI server for the NLP-based expense categorization microservice.
+"""FastAPI server for the Expense Tracker OCR microservice.
 
 Endpoints:
-    POST /predict-category  — Predict expense category from receipt text
-    GET  /health            — Health check
-    GET  /categories        — List supported categories
-
-Usage:
-    python app.py
-    # or
-    uvicorn app:app --host 0.0.0.0 --port 8000
+    POST /ocr     — Upload image, run OpenCV preprocessing -> PaddleOCR -> deterministic parser
+    GET  /health  — Health check endpoint
 """
 
+import logging
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
 
-from predict import predict_category, get_categories, is_model_loaded
+from config.settings import settings
+from ocr.paddle_service import log_runtime_diagnostics, get_paddle_service
+from routes.ocr_routes import router as ocr_router
 
-# ---------------------------------------------------------------------------
-# FastAPI app
-# ---------------------------------------------------------------------------
+logging.basicConfig(
+    level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
+
 app = FastAPI(
-    title="Expense Categorization API",
-    description="NLP-based expense category prediction from receipt OCR text",
-    version="1.0.0",
+    title="Expense Tracker OCR API",
+    description="Microservice for receipt image preprocessing, PaddleOCR extraction, and deterministic parsing.",
+    version="2.0.0",
 )
 
-# CORS — allow requests from the Node.js backend and any frontend
+
+@app.on_event("startup")
+async def startup_event():
+    log_runtime_diagnostics()
+    logger.info("Pre-warming PaddleOCR engine...")
+    get_paddle_service()
+    logger.info("PaddleOCR engine warm and ready.")
+
+
+ALLOWED_ORIGINS = [
+    "http://localhost:5000",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-# ---------------------------------------------------------------------------
-# Request / Response schemas
-# ---------------------------------------------------------------------------
-class PredictRequest(BaseModel):
-    text: str = Field(
-        ...,
-        min_length=1,
-        description="Receipt OCR text to categorize",
-        json_schema_extra={"example": "Starbucks coffee latte total $5.75"},
-    )
+app.include_router(ocr_router)
 
 
-class PredictResponse(BaseModel):
-    category: str = Field(description="Predicted expense category")
-    confidence: float = Field(description="Prediction confidence (0.0 - 1.0)")
-
-
-class HealthResponse(BaseModel):
-    status: str
-    model_loaded: bool
-
-
-class CategoriesResponse(BaseModel):
-    categories: list[str]
-    count: int
-
-
-# ---------------------------------------------------------------------------
-# Endpoints
-# ---------------------------------------------------------------------------
-@app.post(
-    "/predict-category",
-    response_model=PredictResponse,
-    summary="Predict expense category",
-    description="Accepts receipt OCR text and returns the predicted category with confidence score.",
-)
-async def predict_endpoint(request: PredictRequest):
-    """Predict the expense category from receipt text."""
-    if not is_model_loaded():
-        raise HTTPException(
-            status_code=503,
-            detail="Model not loaded. Run 'python train.py' first.",
-        )
-
-    result = predict_category(request.text)
-    return PredictResponse(**result)
-
-
-@app.get(
-    "/health",
-    response_model=HealthResponse,
-    summary="Health check",
-)
-async def health_check():
-    """Check if the service is running and model is loaded."""
-    return HealthResponse(
-        status="healthy" if is_model_loaded() else "degraded",
-        model_loaded=is_model_loaded(),
-    )
-
-
-@app.get(
-    "/categories",
-    response_model=CategoriesResponse,
-    summary="List categories",
-)
-async def list_categories():
-    """Return all supported expense categories."""
-    if not is_model_loaded():
-        raise HTTPException(
-            status_code=503,
-            detail="Model not loaded. Run 'python train.py' first.",
-        )
-
-    cats = get_categories()
-    return CategoriesResponse(categories=cats, count=len(cats))
-
-
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
 if __name__ == "__main__":
     uvicorn.run(
         "app:app",
-        host="0.0.0.0",
-        port=8000,
+        host=settings.HOST,
+        port=settings.PORT,
         reload=False,
-        log_level="info",
+        log_level=settings.LOG_LEVEL.lower(),
     )
