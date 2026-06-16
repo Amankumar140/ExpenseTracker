@@ -12,13 +12,23 @@ const expenseSchema = new mongoose.Schema({
     trim: true
   },
   date: {
-    type: String,
+    type: Date,
     required: false
   },
   total: {
     type: Number,
-    required: true,
+    required: false,
     min: 0
+  },
+  needsReview: {
+    type: Boolean,
+    default: false
+  },
+  extractionConfidence: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: 0
   },
   tax: {
     type: Number,
@@ -84,7 +94,7 @@ const expenseSchema = new mongoose.Schema({
   },
   categorizationSource: {
     type: String,
-    enum: ['ml', 'keyword'],
+    enum: ['ml', 'keyword', 'lookup'],
     default: 'keyword'
   }
 }, {
@@ -94,6 +104,7 @@ const expenseSchema = new mongoose.Schema({
 // Index for faster queries
 expenseSchema.index({ userId: 1, category: 1, createdAt: -1 });
 expenseSchema.index({ userId: 1, createdAt: -1 });
+expenseSchema.index({ userId: 1, date: -1 });
 
 const Expense = mongoose.model('Expense', expenseSchema);
 

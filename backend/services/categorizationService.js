@@ -1,3 +1,25 @@
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+let merchantMap = null;
+
+const loadMerchantMap = () => {
+  if (merchantMap) return merchantMap;
+  try {
+    const mapPath = path.join(__dirname, '..', 'config', 'merchantMap.json');
+    const rawData = fs.readFileSync(mapPath, 'utf8');
+    merchantMap = JSON.parse(rawData);
+    return merchantMap;
+  } catch (error) {
+    console.error('Failed to load merchant map:', error.message);
+    return {};
+  }
+};
+
 /**
  * Expense categories with keyword rules
  */
@@ -130,4 +152,31 @@ export const manualCategorize = (newCategory) => {
     confidence: 100,
     matchedKeywords: ['manual']
   };
+};
+
+/**
+ * Look up a merchant name in the static lookup table
+ * @param {string} merchantName - The parsed merchant name
+ * @returns {Object|null} Matching category and confidence, or null
+ */
+export const lookupMerchant = (merchantName) => {
+  if (!merchantName) return null;
+  const cleanName = merchantName.trim().toLowerCase();
+  if (!cleanName) return null;
+
+  const map = loadMerchantMap();
+  
+  // Check for direct match or substring match
+  for (const [key, category] of Object.entries(map)) {
+    const cleanKey = key.toLowerCase();
+    if (cleanName === cleanKey || cleanName.includes(cleanKey) || cleanKey.includes(cleanName)) {
+      return {
+        category,
+        confidence: 99,
+        matchedKeywords: ['merchant-lookup']
+      };
+    }
+  }
+
+  return null;
 };
