@@ -32,8 +32,8 @@ const ExpenseTable = ({ expenses, onUpdate, onDelete }) => {
     setEditForm({
       merchant: expense.merchant,
       date: expense.date,
-      total: expense.total,
-      tax: expense.tax,
+      total: expense.total !== null && expense.total !== undefined ? expense.total : '',
+      tax: expense.tax !== null && expense.tax !== undefined ? expense.tax : '',
       category: expense.category,
       notes: expense.notes || ''
     });
@@ -76,12 +76,12 @@ const ExpenseTable = ({ expenses, onUpdate, onDelete }) => {
     .sort((a, b) => {
       let aVal = a[sortField];
       let bVal = b[sortField];
-      
+
       if (sortField === 'createdAt') {
         aVal = new Date(aVal);
         bVal = new Date(bVal);
       }
-      
+
       if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
       return 0;
@@ -104,9 +104,8 @@ const ExpenseTable = ({ expenses, onUpdate, onDelete }) => {
           style={{ width: `${value}%` }}
         ></div>
       </div>
-      <span className={`text-xs font-semibold min-w-[32px] ${
-        value >= 70 ? 'text-emerald-500' : value >= 40 ? 'text-amber-500' : 'text-red-500'
-      }`}>{value}%</span>
+      <span className={`text-xs font-semibold min-w-[32px] ${value >= 70 ? 'text-emerald-500' : value >= 40 ? 'text-amber-500' : 'text-red-500'
+        }`}>{value}%</span>
     </div>
   );
 
@@ -156,9 +155,8 @@ const ExpenseTable = ({ expenses, onUpdate, onDelete }) => {
               ].map(col => (
                 <th
                   key={col.label}
-                  className={`px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider transition-colors ${
-                    col.sortable ? 'cursor-pointer' : ''
-                  } ${isDark ? 'text-slate-400 hover:text-slate-300' : 'text-slate-500 hover:text-slate-700'}`}
+                  className={`px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider transition-colors ${col.sortable ? 'cursor-pointer' : ''
+                    } ${isDark ? 'text-slate-400 hover:text-slate-300' : 'text-slate-500 hover:text-slate-700'}`}
                   onClick={() => col.sortable && handleSort(col.field)}
                 >
                   {col.label} {col.sortable && <SortIcon field={col.field} />}
@@ -187,27 +185,27 @@ const ExpenseTable = ({ expenses, onUpdate, onDelete }) => {
                     // Edit mode
                     <>
                       <td className="px-4 py-3">
-                        <input type="text" value={editForm.merchant} onChange={(e) => setEditForm({...editForm, merchant: e.target.value})}
+                        <input type="text" value={editForm.merchant} onChange={(e) => setEditForm({ ...editForm, merchant: e.target.value })}
                           className={`border rounded-lg px-3 py-1.5 w-full text-sm ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-slate-300'}`}
                         />
                       </td>
                       <td className="px-4 py-3">
-                        <input type="text" value={editForm.date} onChange={(e) => setEditForm({...editForm, date: e.target.value})}
+                        <input type="text" value={editForm.date} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
                           className={`border rounded-lg px-3 py-1.5 w-full text-sm ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-slate-300'}`}
                         />
                       </td>
                       <td className="px-4 py-3">
-                        <input type="number" step="0.01" value={editForm.total} onChange={(e) => setEditForm({...editForm, total: parseFloat(e.target.value)})}
+                        <input type="number" step="0.01" value={editForm.total} onChange={(e) => setEditForm({ ...editForm, total: parseFloat(e.target.value) })}
                           className={`border rounded-lg px-3 py-1.5 w-full text-sm ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-slate-300'}`}
                         />
                       </td>
                       <td className="px-4 py-3">
-                        <input type="number" step="0.01" value={editForm.tax} onChange={(e) => setEditForm({...editForm, tax: parseFloat(e.target.value)})}
+                        <input type="number" step="0.01" value={editForm.tax} onChange={(e) => setEditForm({ ...editForm, tax: parseFloat(e.target.value) })}
                           className={`border rounded-lg px-3 py-1.5 w-full text-sm ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-slate-300'}`}
                         />
                       </td>
                       <td className="px-4 py-3">
-                        <select value={editForm.category} onChange={(e) => setEditForm({...editForm, category: e.target.value})}
+                        <select value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
                           className={`border rounded-lg px-3 py-1.5 w-full text-sm ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-slate-300'}`}
                         >
                           {categories.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
@@ -231,10 +229,23 @@ const ExpenseTable = ({ expenses, onUpdate, onDelete }) => {
                   ) : (
                     // Display mode
                     <>
-                      <td className={`px-4 py-3.5 text-sm font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>{expense.merchant}</td>
+                      <td className={`px-4 py-3.5 text-sm font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                        <div className="flex flex-col">
+                          <span>{expense.merchant}</span>
+                          {expense.needsReview && (
+                            <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider mt-0.5 animate-pulse">⚠️ Needs Review</span>
+                          )}
+                        </div>
+                      </td>
                       <td className={`px-4 py-3.5 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{expense.date}</td>
-                      <td className={`px-4 py-3.5 text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>₹{expense.total.toFixed(2)}</td>
-                      <td className={`px-4 py-3.5 text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>₹{(expense.tax || 0).toFixed(2)}</td>
+                      <td className={`px-4 py-3.5 text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                        {expense.total !== null && expense.total !== undefined ? `₹${expense.total.toFixed(2)}` : (
+                          <span className="text-red-500 font-bold">Pending</span>
+                        )}
+                      </td>
+                      <td className={`px-4 py-3.5 text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                        {expense.tax !== null && expense.tax !== undefined ? `₹${expense.tax.toFixed(2)}` : '—'}
+                      </td>
                       <td className="px-4 py-3.5">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-lg ${getCatStyle(expense.category).badge}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${getCatStyle(expense.category).dot}`}></span>
@@ -299,15 +310,15 @@ const ExpenseTable = ({ expenses, onUpdate, onDelete }) => {
             >
               {editingId === expense._id ? (
                 <div className="space-y-3">
-                  <input type="text" value={editForm.merchant} onChange={(e) => setEditForm({...editForm, merchant: e.target.value})} placeholder="Merchant"
+                  <input type="text" value={editForm.merchant} onChange={(e) => setEditForm({ ...editForm, merchant: e.target.value })} placeholder="Merchant"
                     className={`border rounded-lg px-3 py-2 w-full text-sm ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-slate-300'}`} />
                   <div className="grid grid-cols-2 gap-2">
-                    <input type="text" value={editForm.date} onChange={(e) => setEditForm({...editForm, date: e.target.value})} placeholder="Date"
+                    <input type="text" value={editForm.date} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })} placeholder="Date"
                       className={`border rounded-lg px-3 py-2 w-full text-sm ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-slate-300'}`} />
-                    <input type="number" step="0.01" value={editForm.total} onChange={(e) => setEditForm({...editForm, total: parseFloat(e.target.value)})} placeholder="Total"
+                    <input type="number" step="0.01" value={editForm.total} onChange={(e) => setEditForm({ ...editForm, total: parseFloat(e.target.value) })} placeholder="Total"
                       className={`border rounded-lg px-3 py-2 w-full text-sm ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-slate-300'}`} />
                   </div>
-                  <select value={editForm.category} onChange={(e) => setEditForm({...editForm, category: e.target.value})}
+                  <select value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
                     className={`border rounded-lg px-3 py-2 w-full text-sm ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-slate-300'}`}>
                     {categories.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
                   </select>
@@ -320,10 +331,21 @@ const ExpenseTable = ({ expenses, onUpdate, onDelete }) => {
                 <>
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{expense.merchant}</h3>
+                      <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                        {expense.merchant}
+                        {expense.needsReview && (
+                          <span className="ml-2 inline-block px-1.5 py-0.5 text-[9px] bg-red-500/10 text-red-500 rounded font-bold uppercase tracking-wider align-middle animate-pulse">⚠️ Needs Review</span>
+                        )}
+                      </h3>
                       <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{expense.date}</p>
                     </div>
-                    <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>₹{expense.total.toFixed(2)}</p>
+                    <div className="text-right">
+                      {expense.total !== null && expense.total !== undefined ? (
+                        <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>₹{expense.total.toFixed(2)}</p>
+                      ) : (
+                        <p className="text-red-500 text-sm font-bold">Pending Review</p>
+                      )}
+                    </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 mb-3">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-lg ${getCatStyle(expense.category).badge}`}>

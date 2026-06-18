@@ -16,7 +16,7 @@ const UploadReceipt = ({ onUploadSuccess }) => {
     if (selectedFile && selectedFile.type.startsWith('image/')) {
       setFile(selectedFile);
       setError(null);
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result);
@@ -41,7 +41,7 @@ const UploadReceipt = ({ onUploadSuccess }) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFileChange(e.dataTransfer.files[0]);
     }
@@ -72,14 +72,14 @@ const UploadReceipt = ({ onUploadSuccess }) => {
           setTimeout(() => setUploadStage('categorizing'), 800);
         }
       });
-      
+
       setUploadStage('done');
       setTimeout(() => {
         setFile(null);
         setPreview(null);
         setProgress(0);
         setUploadStage('idle');
-        
+
         if (onUploadSuccess) {
           onUploadSuccess(result.expense);
         }
@@ -115,18 +115,16 @@ const UploadReceipt = ({ onUploadSuccess }) => {
           <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Drag & drop or click to upload</p>
         </div>
       </div>
-      
+
       {/* Upload Zone */}
       <div
-        className={`relative rounded-2xl p-6 sm:p-10 text-center transition-all duration-300 cursor-pointer ${
-          dragActive 
+        className={`relative rounded-2xl p-6 sm:p-10 text-center transition-all duration-300 cursor-pointer ${dragActive
             ? 'gradient-border-animated scale-[1.01]'
             : 'border-2 border-dashed'
-        } ${
-          dragActive
+          } ${dragActive
             ? isDark ? 'bg-indigo-950/30' : 'bg-indigo-50/50'
             : isDark ? 'border-slate-600 hover:border-indigo-500/50 hover:bg-slate-700/30' : 'border-slate-300 hover:border-indigo-400/50 hover:bg-indigo-50/30'
-        }`}
+          }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
@@ -136,9 +134,9 @@ const UploadReceipt = ({ onUploadSuccess }) => {
         {preview ? (
           <div className="space-y-4 animate-scale-in">
             <div className={`inline-block rounded-xl overflow-hidden shadow-xl ${isDark ? 'ring-1 ring-slate-700' : 'ring-1 ring-slate-200'}`}>
-              <img 
-                src={preview} 
-                alt="Receipt preview" 
+              <img
+                src={preview}
+                alt="Receipt preview"
                 className="max-h-48 sm:max-h-64 object-contain"
               />
             </div>
@@ -180,12 +178,12 @@ const UploadReceipt = ({ onUploadSuccess }) => {
               </svg>
             </div>
             <div>
-              <label htmlFor="file-upload" className="cursor-pointer">
+              <div className="cursor-pointer pointer-events-none">
                 <span className={`text-base font-semibold ${isDark ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-700'}`}>
                   Click to upload
                 </span>
                 <span className={isDark ? 'text-slate-400' : 'text-slate-500'}> or drag and drop</span>
-              </label>
+              </div>
               <input
                 id="file-upload"
                 type="file"
@@ -216,11 +214,10 @@ const UploadReceipt = ({ onUploadSuccess }) => {
           <div className="flex justify-between mb-4">
             {stages.map((stage, i) => (
               <div key={stage.id} className="flex flex-col items-center flex-1">
-                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm transition-all duration-500 ${
-                  i <= getStageIndex()
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm transition-all duration-500 ${i <= getStageIndex()
                     ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/30 scale-110'
                     : isDark ? 'bg-slate-700 text-slate-500' : 'bg-slate-200 text-slate-400'
-                }`}>
+                  }`}>
                   {stage.icon}
                 </div>
                 <span className={`text-xs mt-1.5 font-medium ${i <= getStageIndex() ? (isDark ? 'text-indigo-400' : 'text-indigo-600') : (isDark ? 'text-slate-500' : 'text-slate-400')}`}>
@@ -229,7 +226,7 @@ const UploadReceipt = ({ onUploadSuccess }) => {
               </div>
             ))}
           </div>
-          
+
           {/* Progress Bar */}
           <div className={`w-full rounded-full h-2 overflow-hidden ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}>
             <div
@@ -250,11 +247,10 @@ const UploadReceipt = ({ onUploadSuccess }) => {
       <button
         onClick={handleUpload}
         disabled={!file || uploading}
-        className={`mt-5 w-full py-3.5 px-6 rounded-xl font-semibold transition-all duration-300 text-sm ${
-          !file || uploading 
-            ? isDark ? 'bg-slate-700/50 text-slate-500 cursor-not-allowed' : 'bg-slate-200 text-slate-400 cursor-not-allowed' 
+        className={`mt-5 w-full py-3.5 px-6 rounded-xl font-semibold transition-all duration-300 text-sm ${!file || uploading
+            ? isDark ? 'bg-slate-700/50 text-slate-500 cursor-not-allowed' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
             : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 hover:scale-[1.02] active:scale-[0.98]'
-        }`}
+          }`}
       >
         {uploading ? (
           <span className="flex items-center justify-center gap-2">

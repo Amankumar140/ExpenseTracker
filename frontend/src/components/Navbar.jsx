@@ -71,7 +71,7 @@ const Navbar = () => {
           {/* Right side */}
           <div className="flex items-center gap-3 sm:gap-4">
             <DarkModeToggle />
-            
+
             {/* User menu */}
             <div className="relative" ref={dropdownRef}>
               <button
@@ -94,7 +94,7 @@ const Navbar = () => {
                   {/* Online indicator */}
                   <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900"></div>
                 </div>
-                
+
                 <div className="hidden sm:block text-left">
                   <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{user?.name}</p>
                   <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{user?.email}</p>

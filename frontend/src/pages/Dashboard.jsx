@@ -72,21 +72,27 @@ const Dashboard = () => {
 
   const greeting = getGreeting();
   const tabs = [
-    { id: 'upload', label: 'Upload Receipt', icon: (
-      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-      </svg>
-    )},
-    { id: 'expenses', label: 'Expenses', icon: (
-      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-      </svg>
-    )},
-    { id: 'analytics', label: 'Analytics', icon: (
-      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    )},
+    {
+      id: 'upload', label: 'Upload Receipt', icon: (
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        </svg>
+      )
+    },
+    {
+      id: 'expenses', label: 'Expenses', icon: (
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      )
+    },
+    {
+      id: 'analytics', label: 'Analytics', icon: (
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      )
+    },
   ];
 
   return (
@@ -101,7 +107,7 @@ const Dashboard = () => {
           <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-full blur-3xl animate-float"></div>
           <div className="absolute bottom-0 left-0 w-56 h-56 bg-gradient-to-tr from-pink-500/10 to-purple-500/10 rounded-full blur-3xl animate-float animation-delay-2000"></div>
           <div className="absolute top-1/2 left-1/2 w-40 h-40 bg-gradient-to-r from-cyan-500/5 to-blue-500/5 rounded-full blur-2xl animate-float animation-delay-4000"></div>
-          
+
           <div className="relative z-10">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
@@ -115,7 +121,7 @@ const Dashboard = () => {
                   Your financial command center. <span className={`font-semibold ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>Track smarter, spend wiser.</span>
                 </p>
               </div>
-              
+
               {/* Quick Stats */}
               <div className="flex gap-3">
                 <div className={`px-5 py-3.5 rounded-xl transition-all duration-300 hover:scale-105 ${isDark ? 'glass-dark' : 'glass'}`}>
@@ -163,11 +169,10 @@ const Dashboard = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-3 px-4 sm:px-6 text-sm font-semibold rounded-xl transition-all duration-300 ${
-                  activeTab === tab.id
+                className={`flex-1 py-3 px-4 sm:px-6 text-sm font-semibold rounded-xl transition-all duration-300 ${activeTab === tab.id
                     ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/25'
                     : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-center gap-2">
                   {tab.icon}
@@ -190,7 +195,7 @@ const Dashboard = () => {
               {activeTab === 'upload' && (
                 <>
                   <UploadReceipt onUploadSuccess={handleUploadSuccess} />
-                  
+
                   {/* Pro Tips Section */}
                   <div className={`mt-6 rounded-2xl p-6 animate-slide-up animation-delay-400 ${isDark ? 'glass-dark' : 'glass'}`}>
                     <div className="flex items-start gap-4">
@@ -244,8 +249,8 @@ const Dashboard = () => {
                     </div>
                   </div>
                 ) : (
-                  <ExpenseTable 
-                    expenses={expenses} 
+                  <ExpenseTable
+                    expenses={expenses}
                     onUpdate={fetchExpenses}
                     onDelete={fetchExpenses}
                   />
