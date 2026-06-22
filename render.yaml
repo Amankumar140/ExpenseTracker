@@ -1,0 +1,51 @@
+services:
+  # 1. Express Backend Web Service (Docker)
+  - type: web
+    name: expensetracker-backend
+    env: docker
+    dockerContext: backend
+    dockerfilePath: backend/Dockerfile
+    plan: free
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+      - key: ML_SERVICE_URL
+        fromService:
+          type: web
+          name: expensetracker-ml-service
+          property: url
+
+  # 2. Python ML Microservice (Docker)
+  - type: web
+    name: expensetracker-ml-service
+    env: docker
+    dockerContext: ml-service
+    dockerfilePath: ml-service/Dockerfile
+    plan: free
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: MISTRAL_API_KEY
+        sync: false
+
+  # 3. React Frontend Web Service (Docker)
+  - type: web
+    name: expensetracker-frontend
+    env: docker
+    dockerContext: frontend
+    dockerfilePath: frontend/Dockerfile
+    plan: free
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: expensetracker-backend
+          property: url
