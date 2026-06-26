@@ -21,7 +21,7 @@ services:
         fromService:
           type: web
           name: expensetracker-ml-service
-          property: url
+          property: host
 
   # 2. Python ML Microservice (Docker)
   - type: web
@@ -48,4 +48,4 @@ services:
         fromService:
           type: web
           name: expensetracker-backend
-          property: url
+          property: host

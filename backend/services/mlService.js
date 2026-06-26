@@ -2,7 +2,11 @@ import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 
-const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:8000';
+let rawMlUrl = process.env.ML_SERVICE_URL || 'http://localhost:8000';
+if (!rawMlUrl.startsWith('http://') && !rawMlUrl.startsWith('https://')) {
+  rawMlUrl = `https://${rawMlUrl}`;
+}
+const ML_SERVICE_URL = rawMlUrl.replace(/\/$/, '');
 
 const getMimeType = (filePath) => {
   const ext = path.extname(filePath).toLowerCase();
