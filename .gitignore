@@ -36,3 +36,10 @@ yarn-error.log*
 # Testing
 coverage/
 .nyc_output/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
