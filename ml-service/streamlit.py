@@ -53,14 +53,6 @@ st.markdown(
         color: #94a3b8;
         margin-bottom: 2rem;
     }
-    .metric-card {
-        background-color: #1e293b;
-        border-radius: 12px;
-        padding: 1.2rem;
-        border: 1px solid #334155;
-        text-align: center;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -112,7 +104,7 @@ with col_upload:
 
     if uploaded_file is not None:
         image = Image.open(uploaded_file)
-        st.image(image, caption="Uploaded Receipt Preview", use_container_width=True)
+        st.image(image, caption="Uploaded Receipt Preview")
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=Path(uploaded_file.name).suffix) as tmp_file:
             tmp_file.write(uploaded_file.getbuffer())
@@ -121,26 +113,36 @@ with col_upload:
 with col_result:
     st.subheader("🔍 Extraction & AI Results")
 
-    if uploaded_file is not None and st.button("🚀 Process Receipt", type="primary", use_container_width=True):
-        with st.spinner("Running Receipt Processing Pipeline..."):
+    if uploaded_file is not None and st.button("🚀 Process Receipt", type="primary"):
+        with st.spinner("Connecting to ML service & extracting fields..."):
             try:
                 result_data = None
 
                 if execution_mode.startswith("Remote"):
-                    # Process via Remote API Call to Render ML Service
                     endpoint = f"{api_service_url.rstrip('/')}/ocr"
                     files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
                     headers = {}
                     if mistral_key:
                         headers["X-Mistral-Key"] = mistral_key
 
-                    response = requests.post(endpoint, files=files, headers=headers, timeout=120)
-                    if response.status_code == 200:
-                        result_data = response.json()
-                    else:
-                        st.error(f"API Error ({response.status_code}): {response.text}")
+                    try:
+                        response = requests.post(endpoint, files=files, headers=headers, timeout=120)
+                        if response.status_code == 200:
+                            result_data = response.json()
+                        elif response.status_code in (502, 503, 504):
+                            st.warning(
+                                "⏳ **Render ML Service is waking up from idle mode.**\n\n"
+                                "On Render's free tier, services spin down after 15 minutes of inactivity. "
+                                "It takes about **30 seconds** for the service to start. Please click **Process Receipt** again in a few seconds!"
+                            )
+                        else:
+                            st.error(f"API Error ({response.status_code}): {response.text}")
+                    except requests.exceptions.ConnectionError:
+                        st.error(
+                            "❌ **Connection Error**: Could not connect to Render ML Service.\n\n"
+                            f"Please verify your Render ML service URL (`{api_service_url}`) and ensure the Web Service is deployed and active."
+                        )
                 else:
-                    # Process via Direct Local Pipeline
                     if LOCAL_PIPELINE_AVAILABLE:
                         pipeline = ReceiptPipeline()
                         loop = asyncio.new_event_loop()
@@ -201,8 +203,7 @@ with col_result:
                         lines = result_data.get("ocr_data", {}).get("lines", [])
                         if lines:
                             st.dataframe(
-                                [{"Text": l.get("text", ""), "Confidence": f"{l.get('confidence', 0)*100:.1f}%"} for l in lines],
-                                use_container_width=True,
+                                [{"Text": l.get("text", ""), "Confidence": f"{l.get('confidence', 0)*100:.1f}%"} for l in lines]
                             )
 
                     warnings = result_data.get("warnings", [])
