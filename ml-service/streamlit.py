@@ -1,7 +1,6 @@
 """Streamlit Web Application for Expense Tracker ML Service.
 
-Provides an interactive GUI for receipt OCR, regex parsing, and LLM category extraction.
-Supports both direct local pipeline execution and remote API connection (e.g. Render ML microservice).
+Runs PaddleOCR, Regex Parsing, and AI Extraction natively inside Streamlit.
 Run with: streamlit run streamlit.py
 """
 
@@ -12,21 +11,14 @@ import sys
 import tempfile
 from pathlib import Path
 
-import requests
 import streamlit as st
 from PIL import Image
 
 # Ensure ml-service root directory is in sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-# Try importing local pipeline (available when paddle/paddleocr are installed locally)
-LOCAL_PIPELINE_AVAILABLE = False
-try:
-    from pipeline.receipt_pipeline import ReceiptPipeline
-    from config.settings import settings
-    LOCAL_PIPELINE_AVAILABLE = True
-except Exception:
-    LOCAL_PIPELINE_AVAILABLE = False
+from pipeline.receipt_pipeline import ReceiptPipeline
+from config.settings import settings
 
 # Page Configuration
 st.set_page_config(
@@ -60,37 +52,35 @@ st.markdown(
 
 # Header
 st.markdown('<div class="main-header">🧾 Expense OCR & AI Categorizer Studio</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-header">Powered by PaddleOCR engine, Regex Parsing, and Mistral LLM fallback</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-header">Standalone ML Service running PaddleOCR & AI Extraction directly on Streamlit</div>', unsafe_allow_html=True)
 
 # Sidebar Configuration
-st.sidebar.header("⚙️ Microservice Settings")
-
-execution_mode = st.sidebar.radio(
-    "Execution Mode",
-    options=["Remote ML API (Render)", "Local Pipeline (In-Memory)"] if LOCAL_PIPELINE_AVAILABLE else ["Remote ML API (Render)"],
-    index=0,
-    help="Select whether to process receipts via your Render ML microservice API or local in-memory engine.",
-)
-
-api_service_url = st.sidebar.text_input(
-    "ML Service Endpoint URL",
-    value=os.getenv("ML_SERVICE_URL", "https://expensetracker-ml-service.onrender.com"),
-    help="URL of your deployed Render ML service endpoint",
-)
+st.sidebar.header("⚙️ OCR & AI Settings")
 
 mistral_key = st.sidebar.text_input(
     "Mistral API Key",
     type="password",
-    value=os.getenv("MISTRAL_API_KEY", ""),
+    value=os.getenv("MISTRAL_API_KEY", settings.MISTRAL_API_KEY or ""),
     help="Optional: Enables LLM fallback for smart merchant & category extraction",
+)
+
+if mistral_key:
+    settings.MISTRAL_API_KEY = mistral_key
+    settings.LLM_ENABLED = True
+
+use_llm = st.sidebar.checkbox(
+    "Enable LLM Enrichment",
+    value=bool(settings.MISTRAL_API_KEY and settings.LLM_ENABLED),
+    help="Use Mistral AI to improve extraction accuracy when available",
 )
 
 st.sidebar.divider()
 st.sidebar.markdown("### 📊 System Status")
-if execution_mode.startswith("Remote"):
-    st.sidebar.success("Mode: **Remote Render API**")
+st.sidebar.success("Engine: **Native PaddleOCR (In-Memory)**")
+if use_llm and settings.MISTRAL_API_KEY:
+    st.sidebar.success("LLM Status: **Mistral Connected**")
 else:
-    st.sidebar.success("Mode: **Local Engine Active**")
+    st.sidebar.info("LLM Status: **Regex Parsing Only**")
 
 # Main Interface Layout
 col_upload, col_result = st.columns([1, 1.2], gap="large")
@@ -114,42 +104,15 @@ with col_result:
     st.subheader("🔍 Extraction & AI Results")
 
     if uploaded_file is not None and st.button("🚀 Process Receipt", type="primary"):
-        with st.spinner("Connecting to ML service & extracting fields..."):
+        pipeline = ReceiptPipeline()
+
+        with st.spinner("Running PaddleOCR & AI Extraction natively..."):
             try:
-                result_data = None
-
-                if execution_mode.startswith("Remote"):
-                    endpoint = f"{api_service_url.rstrip('/')}/ocr"
-                    files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
-                    headers = {}
-                    if mistral_key:
-                        headers["X-Mistral-Key"] = mistral_key
-
-                    try:
-                        response = requests.post(endpoint, files=files, headers=headers, timeout=120)
-                        if response.status_code == 200:
-                            result_data = response.json()
-                        elif response.status_code in (502, 503, 504):
-                            st.warning(
-                                "⏳ **Render ML Service is waking up from idle mode.**\n\n"
-                                "On Render's free tier, services spin down after 15 minutes of inactivity. "
-                                "It takes about **30 seconds** for the service to start. Please click **Process Receipt** again in a few seconds!"
-                            )
-                        else:
-                            st.error(f"API Error ({response.status_code}): {response.text}")
-                    except requests.exceptions.ConnectionError:
-                        st.error(
-                            "❌ **Connection Error**: Could not connect to Render ML Service.\n\n"
-                            f"Please verify your Render ML service URL (`{api_service_url}`) and ensure the Web Service is deployed and active."
-                        )
-                else:
-                    if LOCAL_PIPELINE_AVAILABLE:
-                        pipeline = ReceiptPipeline()
-                        loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(loop)
-                        res_obj = loop.run_until_complete(pipeline.process_image_full(tmp_image_path))
-                        loop.close()
-                        result_data = res_obj.model_dump()
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                res_obj = loop.run_until_complete(pipeline.process_image_full(tmp_image_path))
+                loop.close()
+                result_data = res_obj.model_dump()
 
                 # Clean up temp file
                 if 'tmp_image_path' in locals() and os.path.exists(tmp_image_path):
