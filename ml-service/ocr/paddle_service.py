@@ -17,13 +17,15 @@ os.environ["FLAGS_enable_pir_api"] = "0"
 os.environ["FLAGS_enable_pir_in_executor"] = "0"
 os.environ["PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK"] = "True"
 
+HAS_PADDLE = False
 try:
-    import torch  # noqa: F401
-except ImportError:
-    pass
-
-import paddle
-from paddleocr import PaddleOCR
+    import paddle
+    from paddleocr import PaddleOCR
+    HAS_PADDLE = True
+except Exception:
+    HAS_PADDLE = False
+    paddle = None
+    PaddleOCR = None
 
 from config.settings import settings
 from utils.image_utils import ensure_bgr_uint8
@@ -80,6 +82,11 @@ class PaddleReceiptOCR:
 
     def __init__(self) -> None:
         _configure_cpu_runtime()
+        if not HAS_PADDLE:
+            logger.warning("PaddleOCR not available in this Python environment — running in fallback mode")
+            self._engine = None
+            return
+
         logger.info("Loading PaddleOCR engine on CPU...")
         try:
             self._engine = PaddleOCR(
@@ -91,12 +98,15 @@ class PaddleReceiptOCR:
             )
             _configure_cpu_runtime()
         except Exception as exc:
-            logger.exception("PaddleOCR initialization failed: %s", runtime_details())
-            raise RuntimeError(f"PaddleOCR initialization failed: {runtime_details()}") from exc
+            logger.warning("PaddleOCR initialization failed: %s — running in fallback mode", exc)
+            self._engine = None
 
     def recognize(self, image: np.ndarray) -> list[dict[str, Any]]:
         """Run PaddleOCR inference and return structured line records."""
         image_bgr = ensure_bgr_uint8(image)
+        if self._engine is None:
+            logger.warning("PaddleOCR engine not active — returning empty OCR lines")
+            return [{"number": 1, "lines": []}]
         try:
             results = self._engine.ocr(image_bgr)
             pages: list[dict[str, Any]] = []
