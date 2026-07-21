@@ -4,6 +4,17 @@ let rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 if (!rawApiUrl.startsWith('http://') && !rawApiUrl.startsWith('https://')) {
   rawApiUrl = `https://${rawApiUrl}`;
 }
+
+try {
+  const urlObj = new URL(rawApiUrl);
+  if (!urlObj.hostname.includes('.') && urlObj.hostname !== 'localhost') {
+    urlObj.hostname = `${urlObj.hostname}.onrender.com`;
+    rawApiUrl = urlObj.toString();
+  }
+} catch (e) {
+  // Ignore parse error
+}
+
 if (!rawApiUrl.endsWith('/api') && !rawApiUrl.endsWith('/api/')) {
   rawApiUrl = `${rawApiUrl.replace(/\/$/, '')}/api`;
 }
