@@ -37,15 +37,11 @@ router.post('/upload', uploadRateLimiter, (req, res, next) => {
     const ocrResponse = await runOCR(req.file.path);
     const text = ocrResponse?.extracted_text || '';
 
-    if (!ocrResponse || !text.trim()) {
-      return res.status(422).json({
-        message: 'Could not extract text from this receipt. The OCR service may be busy or the image may be unclear. Please try again.',
-        detail: !ocrResponse ? 'OCR service timeout or unavailable' : 'No text detected in image'
-      });
-    }
-
-    // Parse structured expense data from the extracted text
-    const parsedData = parseExpenseData(text, ocrResponse?.ocr_data);
+    // If OCR returned empty or service is offline, fallback gracefully
+    const isOcrAvailable = Boolean(ocrResponse && text.trim());
+    const parsedData = isOcrAvailable 
+      ? parseExpenseData(text, ocrResponse?.ocr_data)
+      : { merchant: 'Receipt Upload', total: null, tax: 0, date: new Date().toISOString() };
 
     let mlPrediction = null;
     let categoryResult = null;
@@ -77,7 +73,7 @@ router.post('/upload', uploadRateLimiter, (req, res, next) => {
     }
 
     // Determine if the record needs review
-    const needsReview = (finalTotal === null || parsedData.merchant === 'Unknown Merchant');
+    const needsReview = (!isOcrAvailable || finalTotal === null || parsedData.merchant === 'Unknown Merchant' || parsedData.merchant === 'Receipt Upload');
 
     // Calculate confidence scores
     const ocrConfidence = ocrResponse?.ocr_confidence !== undefined
