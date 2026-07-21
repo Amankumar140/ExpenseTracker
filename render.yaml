@@ -45,7 +45,4 @@ services:
     plan: free
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: expensetracker-backend
-          property: host
+        sync: false
