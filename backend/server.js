@@ -51,6 +51,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/expenses', authenticate, expenseRoutes);
 
 
+// Base endpoint
+app.get('/', (req, res) => {
+  res.json({ message: 'Expense Tracker API Server is running', health: '/api/health' });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
