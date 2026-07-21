@@ -3,7 +3,9 @@ import fs from 'fs';
 import path from 'path';
 
 let rawMlUrl = process.env.ML_SERVICE_URL || 'http://localhost:8000';
-if (!rawMlUrl.startsWith('http://') && !rawMlUrl.startsWith('https://')) {
+if (rawMlUrl.includes('.onrender.com') && rawMlUrl.startsWith('http://')) {
+  rawMlUrl = rawMlUrl.replace('http://', 'https://');
+} else if (!rawMlUrl.startsWith('http://') && !rawMlUrl.startsWith('https://')) {
   rawMlUrl = `https://${rawMlUrl}`;
 }
 const ML_SERVICE_URL = rawMlUrl.replace(/\/$/, '');

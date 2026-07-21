@@ -22,6 +22,9 @@ connectDB();
 // Initialize Express app
 const app = express();
 
+// Trust proxy for Render / reverse proxies (fixes rate-limiter X-Forwarded-For warning)
+app.set('trust proxy', 1);
+
 // Middleware
 const allowedOrigins = [
   process.env.FRONTEND_URL,
