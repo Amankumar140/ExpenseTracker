@@ -6,7 +6,7 @@ import logging
 import re
 from pathlib import Path
 from typing import Any
-
+# pyrefly: ignore [missing-import]
 import cv2
 import numpy as np
 

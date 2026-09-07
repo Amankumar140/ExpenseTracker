@@ -5,6 +5,7 @@ import logging
 import numpy as np
 
 try:
+    # pyrefly: ignore [missing-import]
     import cv2
 except ImportError:
     cv2 = None

@@ -8,6 +8,12 @@ import logging
 import platform
 from importlib import metadata
 from typing import Any
+# pyrefly: ignore [missing-import]
+from paddleocr import PaddleOCR
+# pyrefly: ignore [missing-import]
+import paddle
+# pyrefly: ignore [missing-import]
+import paddle.base.core as core
 
 import numpy as np
 
@@ -19,8 +25,8 @@ os.environ["PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK"] = "True"
 
 HAS_PADDLE = False
 try:
-    import paddle
-    from paddleocr import PaddleOCR
+    
+    
     HAS_PADDLE = True
 except Exception:
     HAS_PADDLE = False
@@ -71,7 +77,7 @@ def _configure_cpu_runtime() -> None:
     except Exception:
         pass
     try:
-        import paddle.base.core as core
+        
         core.set_flags(flags)
     except Exception:
         pass

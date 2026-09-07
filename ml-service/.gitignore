@@ -20,3 +20,5 @@ model/*.pkl
 
 #data
 /data
+
+logs/*.jsonl
