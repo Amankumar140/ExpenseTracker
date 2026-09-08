@@ -11,3 +11,5 @@ paddlepaddle>=2.6.0; python_version < "3.13"
 paddleocr>=2.7.0; python_version < "3.13"
 langchain-core>=0.1.0
 langchain-mistralai>=0.1.0
+langchain-groq>=1.1.0
+groq>=0.30.0

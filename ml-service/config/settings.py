@@ -30,7 +30,14 @@ class Settings(BaseModel):
     FLAGS_ENABLE_PIR_API: str = "0"
     FLAGS_ENABLE_PIR_IN_EXECUTOR: str = "0"
 
-    # ── Mistral / LangChain LLM Config ──────────────────────────
+    # ── LLM Config (Groq / Mistral) ─────────────────────────────
+    LLM_PROVIDER: str = Field(default=os.getenv("LLM_PROVIDER", "groq").lower())
+    GROQ_API_KEY: str = Field(default=os.getenv("GROQ_API_KEY", ""))
+    GROQ_MODEL: str = Field(default=os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b"))
+    GROQ_TEMPERATURE: float = Field(default=float(os.getenv("GROQ_TEMPERATURE", "0.1")))
+    GROQ_TIMEOUT: int = Field(default=int(os.getenv("GROQ_TIMEOUT", "30")))
+    GROQ_MAX_RETRIES: int = Field(default=int(os.getenv("GROQ_MAX_RETRIES", "2")))
+
     MISTRAL_API_KEY: str = Field(default=os.getenv("MISTRAL_API_KEY", ""))
     MISTRAL_MODEL: str = Field(default=os.getenv("MISTRAL_MODEL", "mistral-small-latest"))
     MISTRAL_TEMPERATURE: float = Field(default=float(os.getenv("MISTRAL_TEMPERATURE", "0.1")))
