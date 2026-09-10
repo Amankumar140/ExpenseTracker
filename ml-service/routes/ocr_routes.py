@@ -19,7 +19,8 @@ class HealthResponse(BaseModel):
     engine: str = "PaddleOCR"
     version: str = "3.0.0"
     llm_enabled: bool = Field(default=False, description="Whether LLM enrichment is active")
-    llm_model: str = Field(default="", description="Mistral model name if LLM is enabled")
+    llm_provider: str = Field(default="", description="Active LLM provider (groq or mistral)")
+    llm_model: str = Field(default="", description="Model name if LLM is enabled")
 
 
 @router.post(
@@ -76,8 +77,14 @@ async def run_ocr_endpoint(file: UploadFile = File(...)):
 )
 async def health_check():
     """Check microservice health status, including LLM availability."""
+    has_groq = bool(settings.GROQ_API_KEY)
+    has_mistral = bool(settings.MISTRAL_API_KEY)
+    provider = "groq" if has_groq else ("mistral" if has_mistral else "none")
+    model = settings.GROQ_MODEL if provider == "groq" else (settings.MISTRAL_MODEL if provider == "mistral" else "")
+
     return HealthResponse(
         status="healthy",
-        llm_enabled=settings.LLM_ENABLED and bool(settings.MISTRAL_API_KEY),
-        llm_model=settings.MISTRAL_MODEL if settings.LLM_ENABLED else "",
+        llm_enabled=settings.LLM_ENABLED and (has_groq or has_mistral),
+        llm_provider=provider,
+        llm_model=model if settings.LLM_ENABLED else "",
     )

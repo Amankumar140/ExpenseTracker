@@ -115,13 +115,26 @@ class ReceiptPipeline:
         category_confidence = 0.0
         notes: Optional[str] = None
 
-        if settings.LLM_ENABLED and settings.MISTRAL_API_KEY:
+        if settings.LLM_ENABLED and (settings.GROQ_API_KEY or settings.MISTRAL_API_KEY):
             try:
-                from ai.mistral_service import get_mistral_service
-
                 llm_start = time.perf_counter()
-                mistral = get_mistral_service()
-                extraction = await mistral.extract(extracted_text, parsed_fields)
+                extraction = None
+
+                # Prioritize Groq (blazing fast, high rate limits) when configured
+                if settings.GROQ_API_KEY and (settings.LLM_PROVIDER == "groq" or not settings.MISTRAL_API_KEY):
+                    try:
+                        from ai.groq_service import get_groq_service
+                        groq_svc = get_groq_service()
+                        extraction = await groq_svc.extract(extracted_text, parsed_fields)
+                    except Exception as ge:
+                        logger.warning("Groq service invocation failed: %s — checking Mistral fallback", ge)
+
+                # Fallback to Mistral if Groq didn't produce an extraction
+                if extraction is None and settings.MISTRAL_API_KEY:
+                    from ai.mistral_service import get_mistral_service
+                    mistral_svc = get_mistral_service()
+                    extraction = await mistral_svc.extract(extracted_text, parsed_fields)
+
                 llm_ms = (time.perf_counter() - llm_start) * 1000
 
                 if extraction is not None:
@@ -149,8 +162,8 @@ class ReceiptPipeline:
                 warnings.append(f"LLM unavailable: {e}")
         elif not settings.LLM_ENABLED:
             warnings.append("LLM disabled via LLM_ENABLED=false")
-        elif not settings.MISTRAL_API_KEY:
-            warnings.append("MISTRAL_API_KEY not configured — LLM enrichment skipped")
+        else:
+            warnings.append("No LLM API keys configured (GROQ_API_KEY or MISTRAL_API_KEY) — LLM enrichment skipped")
 
         total_ms = (time.perf_counter() - pipeline_start) * 1000
         logger.info(
