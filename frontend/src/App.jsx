@@ -13,17 +13,17 @@ import { useAuth } from './context/AuthContext';
 function App() {
   const { user, loading } = useAuth();
   const location = useLocation();
-  
+
   // Pages that should show the public navbar
   const publicPages = ['/', '/about', '/contact', '/login', '/signup'];
   const showPublicNavbar = publicPages.includes(location.pathname) || (!user && location.pathname.startsWith('/auth'));
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="min-h-screen flex items-center justify-center bg-white text-gray-900">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-600 font-medium">Loading...</p>
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-800 font-extrabold uppercase tracking-wider text-sm">Loading ExpenseTrack...</p>
         </div>
       </div>
     );
@@ -37,18 +37,18 @@ function App() {
         <Route path="/home" element={!user ? <Home /> : <Navigate to="/dashboard" replace />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
-        
+
         {/* Auth Routes */}
-        <Route 
-          path="/login" 
-          element={user ? <Navigate to="/dashboard" replace /> : <Login />} 
+        <Route
+          path="/login"
+          element={user ? <Navigate to="/dashboard" replace /> : <Login />}
         />
-        <Route 
-          path="/signup" 
-          element={user ? <Navigate to="/dashboard" replace /> : <Signup />} 
+        <Route
+          path="/signup"
+          element={user ? <Navigate to="/dashboard" replace /> : <Signup />}
         />
         <Route path="/auth/callback" element={<AuthCallback />} />
-        
+
         {/* Protected Dashboard Route */}
         <Route
           path="/dashboard"
@@ -58,13 +58,13 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
+
         {/* Root Route - Show Home if not logged in, Dashboard if logged in */}
         <Route
           path="/"
           element={user ? <Navigate to="/dashboard" replace /> : <Home />}
         />
-        
+
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

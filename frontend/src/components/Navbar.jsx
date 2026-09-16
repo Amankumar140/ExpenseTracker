@@ -1,11 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../context/ThemeContext';
-import DarkModeToggle from './DarkModeToggle';
+import { Receipt, LogOut, ChevronDown, User as UserIcon } from 'lucide-react';
 
 const Navbar = () => {
-  const { isDark } = useTheme();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const { user, logout } = useAuth();
@@ -38,96 +36,86 @@ const Navbar = () => {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return '☀️ Good Morning';
-    if (hour < 17) return '🌤️ Good Afternoon';
-    return '🌙 Good Evening';
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
   };
 
   return (
-    <nav className={`sticky top-0 z-50 transition-all duration-300 ${isDark ? 'glass-dark' : 'glass'} border-b ${isDark ? 'border-slate-700/50' : 'border-slate-200/50'}`}>
+    <nav className="sticky top-0 z-50 bg-gray-900 text-white border-b-2 border-gray-800 shadow-none">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className="flex items-center gap-3 group cursor-pointer" onClick={() => navigate('/dashboard')}>
-            <div className="relative">
-              <div className="h-10 w-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-indigo-500/25 transition-all duration-300 group-hover:scale-105">
-                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              {/* Animated ring */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-xl opacity-0 group-hover:opacity-30 blur transition-opacity duration-500"></div>
+          <div
+            className="flex items-center gap-3 cursor-pointer select-none"
+            onClick={() => navigate('/dashboard')}
+          >
+            <div className="h-10 w-10 bg-blue-500 text-white rounded-md flex items-center justify-center transition-transform duration-200 hover:scale-105">
+              <Receipt size={22} strokeWidth={2.5} />
             </div>
             <div>
-              <h1 className={`text-xl font-bold bg-gradient-to-r bg-clip-text text-transparent ${isDark ? 'from-white to-slate-300' : 'from-slate-900 to-slate-700'}`}>
+              <span className="text-xl font-extrabold tracking-tight text-white">
                 ExpenseTrack
-              </h1>
-              <p className={`text-xs hidden sm:block font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                Smart expense management
+              </span>
+              <p className="text-[11px] font-medium text-gray-400 hidden sm:block uppercase tracking-wider">
+                Financial Command Center
               </p>
             </div>
           </div>
 
           {/* Right side */}
           <div className="flex items-center gap-3 sm:gap-4">
-            <DarkModeToggle />
-
             {/* User menu */}
             <div className="relative" ref={dropdownRef}>
               <button
+                type="button"
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className={`flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 rounded-xl transition-all duration-200 ${isDark ? 'hover:bg-slate-800/80' : 'hover:bg-slate-100/80'}`}
+                className="flex items-center gap-2.5 sm:gap-3 px-3 py-1.5 rounded-md transition-colors duration-200 hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                aria-expanded={dropdownOpen}
               >
-                {/* Avatar with gradient ring */}
+                {/* Avatar with flat styling */}
                 <div className="relative">
                   {user?.avatar ? (
                     <img
                       src={user.avatar}
                       alt={user.name}
-                      className="h-9 w-9 rounded-full ring-2 ring-offset-2 ring-indigo-500/50 ring-offset-transparent"
+                      className="h-9 w-9 rounded-full object-cover border-2 border-blue-500"
                     />
                   ) : (
-                    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-sm shadow-lg">
+                    <div className="h-9 w-9 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm">
                       {getInitials(user?.name)}
                     </div>
                   )}
-                  {/* Online indicator */}
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900"></div>
+                  {/* Status dot */}
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-gray-900"></div>
                 </div>
 
                 <div className="hidden sm:block text-left">
-                  <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{user?.name}</p>
-                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{user?.email}</p>
+                  <p className="text-sm font-bold text-white leading-tight">{user?.name || 'Account'}</p>
+                  <p className="text-xs text-gray-400 leading-tight truncate max-w-[140px]">{user?.email}</p>
                 </div>
-                <svg
-                  className={`hidden sm:block h-4 w-4 transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''} ${isDark ? 'text-slate-500' : 'text-slate-400'}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                <ChevronDown
+                  size={16}
+                  strokeWidth={2.5}
+                  className={`text-gray-400 transition-transform duration-200 ${dropdownOpen ? 'rotate-180 text-white' : ''}`}
+                />
               </button>
 
-              {/* Dropdown */}
+              {/* Dropdown - Solid Color Block Panel, Zero Shadows, Zero Blur */}
               {dropdownOpen && (
-                <div className={`absolute right-0 mt-2 w-64 rounded-2xl shadow-2xl py-2 animate-slide-down ${isDark ? 'glass-dark border-slate-700' : 'glass border-slate-200'}`}>
-                  <div className={`px-4 py-3 border-b ${isDark ? 'border-slate-700/50' : 'border-slate-200/50'}`}>
-                    <p className={`text-xs font-medium ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>{getGreeting()}</p>
-                    <p className={`text-sm font-bold mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>{user?.name}</p>
-                    <p className={`text-xs truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{user?.email}</p>
+                <div className="absolute right-0 mt-2 w-64 rounded-md bg-white text-gray-900 border-2 border-gray-900 shadow-none py-2 z-50">
+                  <div className="px-4 py-3 bg-gray-100 border-b-2 border-gray-200">
+                    <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">{getGreeting()}</p>
+                    <p className="text-sm font-extrabold mt-0.5 text-gray-900">{user?.name}</p>
+                    <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                   </div>
-                  <div className="py-1">
+                  <div className="p-2">
                     <button
                       onClick={handleLogout}
-                      className={`w-full text-left px-4 py-2.5 text-sm transition-all duration-200 flex items-center gap-3 rounded-lg mx-1 ${isDark ? 'text-red-400 hover:bg-red-500/10' : 'text-red-600 hover:bg-red-50'}`}
-                      style={{ width: 'calc(100% - 8px)' }}
+                      type="button"
+                      className="w-full text-left px-3 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors duration-150 flex items-center gap-2.5"
                     >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-red-500/10' : 'bg-red-50'}`}>
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                      </div>
+                      <LogOut size={16} strokeWidth={2.5} />
                       Sign out
                     </button>
                   </div>
