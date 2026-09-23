@@ -1,19 +1,64 @@
 import { useEffect, useState } from 'react';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
+} from 'recharts';
 import { getAnalytics, exportToCSV } from '../services/api';
-import { useTheme } from '../context/ThemeContext';
-
-const COLORS = ['#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#0ea5e9', '#6366f1'];
+import Card from './ui/Card';
+import Button from './ui/Button';
+import StatCard from './ui/StatCard';
+import { TOKENS } from '../tokens';
+import {
+  BarChart3,
+  PieChart as PieIcon,
+  Download,
+  Calendar,
+  DollarSign,
+  TrendingUp,
+  Receipt,
+  FileSpreadsheet
+} from 'lucide-react';
 
 const STAT_CONFIGS = [
-  { key: 'totalExpenses', label: 'Total Expenses', icon: '📊', gradient: 'from-blue-500 to-indigo-500', format: (v) => v },
-  { key: 'totalSpent', label: 'Total Spent', icon: '💰', gradient: 'from-emerald-500 to-green-500', format: (v) => `₹${v}` },
-  { key: 'averageExpense', label: 'Average Expense', icon: '📈', gradient: 'from-violet-500 to-purple-500', format: (v) => `₹${v}` },
-  { key: 'totalTax', label: 'Total Tax', icon: '🏛️', gradient: 'from-amber-500 to-orange-500', format: (v) => `₹${v}` },
+  {
+    key: 'totalExpenses',
+    label: 'Total Expenses',
+    icon: Receipt,
+    variant: 'blue',
+    format: (v) => v || 0
+  },
+  {
+    key: 'totalSpent',
+    label: 'Total Spent',
+    icon: DollarSign,
+    variant: 'rose',
+    format: (v) => `-₹${v || 0}`
+  },
+  {
+    key: 'averageExpense',
+    label: 'Average Expense',
+    icon: TrendingUp,
+    variant: 'amber',
+    format: (v) => `₹${v || 0}`
+  },
+  {
+    key: 'totalTax',
+    label: 'Total Tax',
+    icon: FileSpreadsheet,
+    variant: 'emerald',
+    format: (v) => `₹${v || 0}`
+  },
 ];
 
 const Analytics = () => {
-  const { isDark } = useTheme();
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -30,12 +75,12 @@ const Analytics = () => {
       const params = selectedYear !== 'all' ? { year: selectedYear } : {};
       const data = await getAnalytics(params);
       setAnalytics(data);
-      
+
       if (data.availableYears) {
         setAvailableYears(data.availableYears);
       }
     } catch (err) {
-      setError('Failed to load analytics');
+      setError('Failed to load analytics data');
       console.error('Analytics error:', err);
     } finally {
       setLoading(false);
@@ -54,21 +99,15 @@ const Analytics = () => {
 
   if (loading) {
     return (
-      <div className="space-y-6 animate-slide-up">
+      <div className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className={`rounded-2xl p-6 ${isDark ? 'bg-slate-800/50 border border-slate-700/50' : 'bg-white/80 border border-slate-200/50'}`}>
-              <div className={`h-4 w-24 rounded mb-3 ${isDark ? 'skeleton-dark' : 'skeleton'}`}></div>
-              <div className={`h-8 w-32 rounded ${isDark ? 'skeleton-dark' : 'skeleton'}`}></div>
-            </div>
+            <div key={i} className="rounded-lg p-6 bg-gray-100 animate-pulse h-32 border-0"></div>
           ))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {[...Array(2)].map((_, i) => (
-            <div key={i} className={`rounded-2xl p-6 ${isDark ? 'bg-slate-800/50 border border-slate-700/50' : 'bg-white/80 border border-slate-200/50'}`}>
-              <div className={`h-6 w-48 rounded mb-4 ${isDark ? 'skeleton-dark' : 'skeleton'}`}></div>
-              <div className={`h-64 rounded ${isDark ? 'skeleton-dark' : 'skeleton'}`}></div>
-            </div>
+            <div key={i} className="rounded-lg p-6 bg-gray-100 animate-pulse h-80 border-0"></div>
           ))}
         </div>
       </div>
@@ -77,10 +116,9 @@ const Analytics = () => {
 
   if (error) {
     return (
-      <div className={`rounded-2xl p-8 text-center ${isDark ? 'bg-slate-800/50 border border-slate-700/50' : 'bg-white/80 border border-slate-200/50'}`}>
-        <span className="text-3xl block mb-3">⚠️</span>
-        <p className="text-red-500 font-medium">{error}</p>
-      </div>
+      <Card color="rose" padding="default" className="text-center border-2 border-red-500">
+        <p className="text-red-700 font-bold">{error}</p>
+      </Card>
     );
   }
 
@@ -97,12 +135,17 @@ const Analytics = () => {
 
   const totalSpentNum = parseFloat(analytics.stats.totalSpent) || 1;
 
+  // Rule 4 & 8: Flat solid tooltip - zero blur, zero shadows, high contrast
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       return (
-        <div className={`px-4 py-3 rounded-xl shadow-xl border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-          <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{payload[0].name || payload[0].payload.month || payload[0].payload.name}</p>
-          <p className="text-sm font-bold text-indigo-500">₹{payload[0].value.toFixed(2)}</p>
+        <div className="p-3 bg-gray-900 text-white rounded-md border-2 border-gray-900 shadow-none text-xs">
+          <p className="font-extrabold uppercase tracking-wider text-gray-300">
+            {payload[0].name || payload[0].payload.month || payload[0].payload.name}
+          </p>
+          <p className="font-black text-sm text-blue-400 mt-0.5">
+            ₹{payload[0].value.toFixed(2)}
+          </p>
         </div>
       );
     }
@@ -110,182 +153,219 @@ const Analytics = () => {
   };
 
   return (
-    <div className="space-y-6 animate-slide-up">
-      {/* Year Filter & Export */}
-      <div className={`rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${isDark ? 'bg-slate-800/50 border border-slate-700/50' : 'bg-white/80 border border-slate-200/50'}`}>
-        <div className="flex items-center gap-3">
-          <label htmlFor="year-filter" className={`text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-            📅 Filter by Year:
-          </label>
-          <div className="flex gap-1.5 flex-wrap">
+    <div className="space-y-6">
+      {/* Year Filter & Export Bar - Rigid Flat Color Block */}
+      <div className="rounded-lg p-4 bg-gray-100 border-2 border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-extrabold uppercase tracking-wider text-gray-700 flex items-center gap-1.5 mr-2">
+            <Calendar size={15} strokeWidth={2.5} /> Filter Year:
+          </span>
+          <button
+            onClick={() => setSelectedYear('all')}
+            type="button"
+            className={`px-3.5 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition-colors duration-150 ${
+              selectedYear === 'all'
+                ? 'bg-blue-500 text-white'
+                : 'bg-white text-gray-800 hover:bg-gray-200'
+            }`}
+          >
+            All Time
+          </button>
+          {availableYears.map(year => (
             <button
-              onClick={() => setSelectedYear('all')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
-                selectedYear === 'all'
-                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/25'
-                  : isDark ? 'bg-slate-700/50 text-slate-400 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              key={year}
+              onClick={() => setSelectedYear(year)}
+              type="button"
+              className={`px-3.5 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition-colors duration-150 ${
+                selectedYear === year
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-white text-gray-800 hover:bg-gray-200'
               }`}
             >
-              All
+              {year}
             </button>
-            {availableYears.map(year => (
-              <button
-                key={year}
-                onClick={() => setSelectedYear(year)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
-                  selectedYear === year
-                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/25'
-                    : isDark ? 'bg-slate-700/50 text-slate-400 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {year}
-              </button>
-            ))}
-          </div>
+          ))}
         </div>
 
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={handleExport}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-semibold text-sm shadow-md hover:shadow-lg hover:shadow-emerald-500/25 hover:scale-105 transition-all duration-300"
+          className="bg-white hover:bg-gray-200 text-gray-900"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          Export CSV
-        </button>
+          <Download size={15} strokeWidth={2.5} className="mr-1.5" />
+          Export CSV Data
+        </Button>
       </div>
 
-      {/* Stat Cards */}
+      {/* Summary Stat Cards - Rule 6: color-block cards using tints with bold stat numbers */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {STAT_CONFIGS.map((config, i) => (
-          <div
+        {STAT_CONFIGS.map((config) => (
+          <StatCard
             key={config.key}
-            className={`rounded-2xl p-5 transition-all duration-300 hover:scale-[1.02] animate-slide-up ${isDark ? 'bg-slate-800/50 border border-slate-700/50' : 'bg-white/80 border border-slate-200/50'}`}
-            style={{ animationDelay: `${i * 0.08}s` }}
-          >
-            <div className="flex items-start justify-between mb-3">
-              <h3 className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{config.label}</h3>
-              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${config.gradient} flex items-center justify-center shadow-lg text-lg`}>
-                {config.icon}
-              </div>
-            </div>
-            <p className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              {config.format(analytics.stats[config.key])}
-            </p>
-          </div>
+            label={config.label}
+            value={config.format(analytics.stats[config.key])}
+            icon={config.icon}
+            variant={config.variant}
+          />
         ))}
       </div>
 
-      {/* Charts */}
+      {/* Flat Charts Grid - Rule 4: solid fills only, no gradients, no glow, no shadow */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Donut Chart */}
-        <div className={`rounded-2xl p-5 sm:p-6 animate-slide-up animation-delay-200 ${isDark ? 'bg-slate-800/50 border border-slate-700/50' : 'bg-white/80 border border-slate-200/50'}`}>
-          <h3 className={`text-lg font-bold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            <span className="text-xl">🍩</span> Spending by Category
-          </h3>
+        
+        {/* Spending by Category - Donut Chart */}
+        <Card color="white" padding="default" className="border-2 border-gray-100">
+          <div className="flex items-center gap-2.5 mb-6">
+            <div className="w-9 h-9 rounded-md bg-blue-100 text-blue-600 flex items-center justify-center">
+              <PieIcon size={20} strokeWidth={2.5} />
+            </div>
+            <h3 className="text-lg font-extrabold text-gray-900 tracking-tight">
+              Spending by Category
+            </h3>
+          </div>
+
           {categoryData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  innerRadius={65}
-                  outerRadius={110}
-                  paddingAngle={3}
-                  fill="#8884d8"
-                  dataKey="value"
-                  cornerRadius={4}
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                {/* Center Label */}
-                <text x="50%" y="47%" textAnchor="middle" className="text-xs" fill={isDark ? '#94a3b8' : '#64748b'}>Total</text>
-                <text x="50%" y="56%" textAnchor="middle" className="text-sm font-bold" fill={isDark ? '#fff' : '#1e293b'}>₹{totalSpentNum.toFixed(0)}</text>
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="relative">
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie
+                    data={categoryData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={70}
+                    outerRadius={105}
+                    paddingAngle={3}
+                    dataKey="value"
+                    stroke="#FFFFFF"
+                    strokeWidth={2}
+                  >
+                    {categoryData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={TOKENS.chartColors[index % TOKENS.chartColors.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+              {/* Center Stat - Pure Typography */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-500">Total</span>
+                <span className="text-xl font-black text-gray-900">₹{totalSpentNum.toFixed(0)}</span>
+              </div>
+            </div>
           ) : (
-            <div className={`text-center py-16 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              <span className="text-3xl block mb-2">📊</span>
-              No data available
+            <div className="text-center py-16 text-gray-400 font-bold text-sm">
+              No category data available
             </div>
           )}
-        </div>
+        </Card>
 
-        {/* Bar Chart */}
-        <div className={`rounded-2xl p-5 sm:p-6 animate-slide-up animation-delay-300 ${isDark ? 'bg-slate-800/50 border border-slate-700/50' : 'bg-white/80 border border-slate-200/50'}`}>
-          <h3 className={`text-lg font-bold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            <span className="text-xl">📊</span> Monthly Spending
-          </h3>
+        {/* Monthly Spending - Flat Solid Bar Chart */}
+        <Card color="white" padding="default" className="border-2 border-gray-100">
+          <div className="flex items-center gap-2.5 mb-6">
+            <div className="w-9 h-9 rounded-md bg-emerald-100 text-emerald-600 flex items-center justify-center">
+              <BarChart3 size={20} strokeWidth={2.5} />
+            </div>
+            <h3 className="text-lg font-extrabold text-gray-900 tracking-tight">
+              Monthly Spending
+            </h3>
+          </div>
+
           {monthlyData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={280}>
               <BarChart data={monthlyData}>
-                <defs>
-                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#6366f1" />
-                    <stop offset="100%" stopColor="#a855f7" />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#e2e8f0'} vertical={false} />
-                <XAxis dataKey="month" stroke={isDark ? '#64748b' : '#94a3b8'} fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke={isDark ? '#64748b' : '#94a3b8'} fontSize={12} tickLine={false} axisLine={false} />
+                {/* Flat Cartesian grid */}
+                <CartesianGrid strokeDasharray="0" stroke="#E5E7EB" vertical={false} />
+                <XAxis
+                  dataKey="month"
+                  stroke="#6B7280"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={{ stroke: '#E5E7EB', strokeWidth: 2 }}
+                />
+                <YAxis
+                  stroke="#6B7280"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={{ stroke: '#E5E7EB', strokeWidth: 2 }}
+                />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="total" fill="url(#barGradient)" radius={[6, 6, 0, 0]} name="Total Spent" />
+                {/* Flat Solid Fill Primary Blue (#3B82F6) */}
+                <Bar
+                  dataKey="total"
+                  fill="#3B82F6"
+                  radius={[4, 4, 0, 0]}
+                  name="Monthly Total"
+                />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className={`text-center py-16 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              <span className="text-3xl block mb-2">📊</span>
-              No data available
+            <div className="text-center py-16 text-gray-400 font-bold text-sm">
+              No monthly data available
             </div>
           )}
-        </div>
+        </Card>
       </div>
 
-      {/* Category Details Table */}
-      <div className={`rounded-2xl overflow-hidden animate-slide-up animation-delay-400 ${isDark ? 'bg-slate-800/50 border border-slate-700/50' : 'bg-white/80 border border-slate-200/50'}`}>
-        <div className="p-5 sm:p-6">
-          <h3 className={`text-lg font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            <span className="text-xl">📋</span> Category Details
+      {/* Category Breakdown Table - Flat Design Rule 7 */}
+      <div className="rounded-lg bg-white border-2 border-gray-100 overflow-hidden">
+        <div className="p-5 border-b-2 border-gray-100">
+          <h3 className="text-base font-extrabold text-gray-900 uppercase tracking-wider">
+            Detailed Category Distribution
           </h3>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full">
+          <table className="min-w-full text-left border-collapse">
             <thead>
-              <tr className={isDark ? 'bg-slate-700/30' : 'bg-slate-50/80'}>
-                <th className={`px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Category</th>
-                <th className={`px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Spent</th>
-                <th className={`px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Share</th>
-                <th className={`px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Count</th>
-                <th className={`px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Average</th>
+              <tr className="bg-gray-100 text-gray-900">
+                <th className="px-5 py-3 text-xs font-extrabold uppercase tracking-wider">Category</th>
+                <th className="px-5 py-3 text-xs font-extrabold uppercase tracking-wider">Total Spent</th>
+                <th className="px-5 py-3 text-xs font-extrabold uppercase tracking-wider">Budget Share</th>
+                <th className="px-5 py-3 text-xs font-extrabold uppercase tracking-wider">Count</th>
+                <th className="px-5 py-3 text-xs font-extrabold uppercase tracking-wider">Average</th>
               </tr>
             </thead>
-            <tbody className={`divide-y ${isDark ? 'divide-slate-700/50' : 'divide-slate-100'}`}>
+            <tbody>
               {categoryData.map((cat, index) => {
                 const percentage = (cat.value / totalSpentNum) * 100;
+                const isEven = index % 2 === 0;
+                const rowBg = isEven ? 'bg-white' : 'bg-gray-50';
+
                 return (
-                  <tr key={index} className={`transition-all duration-200 ${isDark ? 'hover:bg-slate-700/30' : 'hover:bg-indigo-50/30'}`}>
-                    <td className={`px-6 py-4 text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                  <tr key={index} className={`${rowBg} hover:bg-blue-50/70 transition-colors`}>
+                    <td className="px-5 py-3.5 text-sm font-bold text-gray-900">
+                      <div className="flex items-center gap-2.5">
+                        <span
+                          className="w-3 h-3 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: TOKENS.chartColors[index % TOKENS.chartColors.length] }}
+                        />
                         {cat.name}
                       </div>
                     </td>
-                    <td className={`px-6 py-4 text-sm font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>₹{cat.value.toFixed(2)}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-3.5 text-sm font-extrabold text-red-600">
+                      -₹{cat.value.toFixed(2)}
+                    </td>
+                    <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2">
-                        <div className={`flex-1 h-2 rounded-full overflow-hidden max-w-[100px] ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}>
-                          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${percentage}%`, backgroundColor: COLORS[index % COLORS.length] }}></div>
+                        <div className="flex-1 h-2 rounded-full bg-gray-200 overflow-hidden max-w-[120px]">
+                          <div
+                            className="h-full rounded-full transition-all duration-300"
+                            style={{
+                              width: `${percentage}%`,
+                              backgroundColor: TOKENS.chartColors[index % TOKENS.chartColors.length]
+                            }}
+                          />
                         </div>
-                        <span className={`text-xs font-semibold min-w-[36px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{percentage.toFixed(0)}%</span>
+                        <span className="text-xs font-bold text-gray-700 min-w-[36px]">
+                          {percentage.toFixed(0)}%
+                        </span>
                       </div>
                     </td>
-                    <td className={`px-6 py-4 text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{cat.count}</td>
-                    <td className={`px-6 py-4 text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>₹{(cat.value / cat.count).toFixed(2)}</td>
+                    <td className="px-5 py-3.5 text-xs font-bold text-gray-700">{cat.count} txns</td>
+                    <td className="px-5 py-3.5 text-xs font-bold text-gray-700">₹{(cat.value / cat.count).toFixed(2)}</td>
                   </tr>
                 );
               })}

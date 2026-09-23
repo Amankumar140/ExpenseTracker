@@ -1,31 +1,33 @@
 import { useState } from 'react';
 import { updateExpense, deleteExpense } from '../services/api';
-import { useTheme } from '../context/ThemeContext';
-
-const CATEGORY_STYLES = {
-  'Food & Dining': { badge: 'badge-food', dot: 'bg-amber-400' },
-  'Groceries': { badge: 'badge-groceries', dot: 'bg-emerald-400' },
-  'Transportation': { badge: 'badge-transport', dot: 'bg-blue-400' },
-  'Shopping': { badge: 'badge-shopping', dot: 'bg-pink-400' },
-  'Entertainment': { badge: 'badge-entertainment', dot: 'bg-violet-400' },
-  'Healthcare': { badge: 'badge-healthcare', dot: 'bg-red-400' },
-  'Utilities': { badge: 'badge-utilities', dot: 'bg-sky-400' },
-  'Travel': { badge: 'badge-travel', dot: 'bg-teal-400' },
-  'Education': { badge: 'badge-education', dot: 'bg-indigo-400' },
-  'Personal Care': { badge: 'badge-personal', dot: 'bg-orange-400' },
-  'Insurance': { badge: 'badge-insurance', dot: 'bg-slate-400' },
-  'Other': { badge: 'badge-other', dot: 'bg-zinc-400' },
-};
+import Badge from './ui/Badge';
+import Button from './ui/Button';
+import Input from './ui/Input';
+import Select from './ui/Select';
+import { TOKENS } from '../tokens';
+import {
+  Receipt,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Edit2,
+  Trash2,
+  Check,
+  X,
+  AlertTriangle,
+  Bot,
+  Filter,
+  ArrowDownRight
+} from 'lucide-react';
 
 const ExpenseTable = ({ expenses, onUpdate, onDelete }) => {
-  const { isDark } = useTheme();
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [sortField, setSortField] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
   const [filterCategory, setFilterCategory] = useState('');
 
-  const categories = Object.keys(CATEGORY_STYLES);
+  const categories = Object.keys(TOKENS.categoryColors);
 
   const handleEdit = (expense) => {
     setEditingId(expense._id);
@@ -51,7 +53,7 @@ const ExpenseTable = ({ expenses, onUpdate, onDelete }) => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this expense?')) {
+    if (window.confirm('Are you sure you want to delete this expense record?')) {
       try {
         await deleteExpense(id);
         if (onDelete) onDelete();
@@ -89,64 +91,68 @@ const ExpenseTable = ({ expenses, onUpdate, onDelete }) => {
 
   const SortIcon = ({ field }) => {
     const isActive = sortField === field;
-    return (
-      <span className={`ml-1 inline-flex transition-colors ${isActive ? (isDark ? 'text-indigo-400' : 'text-indigo-600') : (isDark ? 'text-slate-600' : 'text-slate-400')}`}>
-        {!isActive ? '↕' : sortOrder === 'asc' ? '↑' : '↓'}
-      </span>
-    );
+    if (!isActive) return <ArrowUpDown size={14} strokeWidth={2.5} className="ml-1 text-gray-400" />;
+    return sortOrder === 'asc'
+      ? <ArrowUp size={14} strokeWidth={2.5} className="ml-1 text-blue-600" />
+      : <ArrowDown size={14} strokeWidth={2.5} className="ml-1 text-blue-600" />;
   };
 
-  const ConfidenceBar = ({ value, color }) => (
+  const ConfidenceBar = ({ value }) => (
     <div className="flex items-center gap-2">
-      <div className={`flex-1 h-1.5 rounded-full overflow-hidden max-w-[60px] ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}>
+      <div className="flex-1 h-2 rounded-full bg-gray-200 overflow-hidden max-w-[64px]">
         <div
-          className={`h-full rounded-full transition-all duration-500 ${color}`}
+          className={`h-full rounded-full ${
+            value >= 70 ? 'bg-emerald-500' : value >= 40 ? 'bg-amber-500' : 'bg-red-500'
+          }`}
           style={{ width: `${value}%` }}
         ></div>
       </div>
-      <span className={`text-xs font-semibold min-w-[32px] ${value >= 70 ? 'text-emerald-500' : value >= 40 ? 'text-amber-500' : 'text-red-500'
-        }`}>{value}%</span>
+      <span className="text-xs font-bold text-gray-700 min-w-[32px]">{value}%</span>
     </div>
   );
 
-  const getCatStyle = (category) => CATEGORY_STYLES[category] || CATEGORY_STYLES['Other'];
-
   return (
-    <div className={`rounded-2xl shadow-sm transition-all duration-300 animate-scale-in ${isDark ? 'bg-slate-800/50 border border-slate-700/50' : 'bg-white/80 border border-slate-200/50'}`}>
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-5 sm:p-6 gap-3">
+    <div className="rounded-lg bg-white border-2 border-gray-100 shadow-none overflow-hidden">
+      {/* Table Toolbar Header */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-5 sm:p-6 gap-4 border-b-2 border-gray-100 bg-white">
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-indigo-900/50 to-purple-900/50' : 'bg-gradient-to-br from-indigo-100 to-purple-100'}`}>
-            <svg className={`w-5 h-5 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
+          <div className="w-10 h-10 rounded-md bg-blue-100 text-blue-600 flex items-center justify-center">
+            <Receipt size={22} strokeWidth={2.5} />
           </div>
           <div>
-            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Expenses</h2>
-            <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{sortedAndFilteredExpenses.length} records</p>
+            <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Expense Records</h2>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+              {sortedAndFilteredExpenses.length} Total Transactions
+            </p>
           </div>
         </div>
-        <select
-          value={filterCategory}
-          onChange={(e) => setFilterCategory(e.target.value)}
-          className={`rounded-xl px-4 py-2.5 text-sm font-medium border transition-all focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${isDark ? 'bg-slate-700/50 border-slate-600 text-slate-200 hover:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'}`}
-        >
-          <option value="">All Categories</option>
-          {categories.map(cat => (
-            <option key={cat} value={cat}>{cat}</option>
-          ))}
-        </select>
+
+        {/* Filter Toolbar */}
+        <div className="flex items-center gap-2">
+          <div className="w-56">
+            <Select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="py-2 text-xs font-bold"
+            >
+              <option value="">All Categories ({categories.length})</option>
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </Select>
+          </div>
+        </div>
       </div>
 
-      {/* Desktop Table */}
+      {/* Desktop Table - Rule 7: no row borders, alternate white / gray-100 rows, sticky solid header */}
       <div className="hidden md:block overflow-x-auto">
-        <table className="min-w-full">
+        <table className="min-w-full text-left border-collapse">
           <thead>
-            <tr className={isDark ? 'bg-slate-700/30' : 'bg-slate-50/80'}>
+            <tr className="sticky top-0 bg-gray-100 text-gray-900 z-10">
               {[
                 { label: 'Merchant', field: 'merchant', sortable: true },
                 { label: 'Date', field: 'date', sortable: true },
-                { label: 'Total', field: 'total', sortable: true },
+                { label: 'Total Amount', field: 'total', sortable: true },
                 { label: 'Tax', field: null, sortable: false },
                 { label: 'Category', field: 'category', sortable: true },
                 { label: 'Confidence', field: null, sortable: false },
@@ -155,221 +161,298 @@ const ExpenseTable = ({ expenses, onUpdate, onDelete }) => {
               ].map(col => (
                 <th
                   key={col.label}
-                  className={`px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider transition-colors ${col.sortable ? 'cursor-pointer' : ''
-                    } ${isDark ? 'text-slate-400 hover:text-slate-300' : 'text-slate-500 hover:text-slate-700'}`}
+                  className={`px-4 py-3.5 text-xs font-extrabold uppercase tracking-wider select-none ${
+                    col.sortable ? 'cursor-pointer hover:bg-gray-200' : ''
+                  }`}
                   onClick={() => col.sortable && handleSort(col.field)}
                 >
-                  {col.label} {col.sortable && <SortIcon field={col.field} />}
+                  <div className="flex items-center">
+                    <span>{col.label}</span>
+                    {col.sortable && <SortIcon field={col.field} />}
+                  </div>
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className={`divide-y ${isDark ? 'divide-slate-700/50' : 'divide-slate-100'}`}>
+          <tbody>
             {sortedAndFilteredExpenses.length === 0 ? (
               <tr>
-                <td colSpan="8" className={`px-4 py-12 text-center ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                <td colSpan="8" className="px-4 py-12 text-center text-gray-500 bg-white">
                   <div className="flex flex-col items-center gap-2">
-                    <span className="text-3xl">📋</span>
-                    <span>No expenses found</span>
+                    <Receipt size={36} strokeWidth={2} className="text-gray-300" />
+                    <span className="font-bold text-sm">No expenses match your criteria</span>
                   </div>
                 </td>
               </tr>
             ) : (
-              sortedAndFilteredExpenses.map((expense, index) => (
-                <tr
-                  key={expense._id}
-                  className={`transition-all duration-200 group animate-slide-up ${isDark ? 'hover:bg-slate-700/30' : 'hover:bg-indigo-50/30'}`}
-                  style={{ animationDelay: `${index * 0.03}s` }}
-                >
-                  {editingId === expense._id ? (
-                    // Edit mode
-                    <>
-                      <td className="px-4 py-3">
-                        <input type="text" value={editForm.merchant} onChange={(e) => setEditForm({ ...editForm, merchant: e.target.value })}
-                          className={`border rounded-lg px-3 py-1.5 w-full text-sm ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-slate-300'}`}
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <input type="text" value={editForm.date} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
-                          className={`border rounded-lg px-3 py-1.5 w-full text-sm ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-slate-300'}`}
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <input type="number" step="0.01" value={editForm.total} onChange={(e) => setEditForm({ ...editForm, total: parseFloat(e.target.value) })}
-                          className={`border rounded-lg px-3 py-1.5 w-full text-sm ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-slate-300'}`}
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <input type="number" step="0.01" value={editForm.tax} onChange={(e) => setEditForm({ ...editForm, tax: parseFloat(e.target.value) })}
-                          className={`border rounded-lg px-3 py-1.5 w-full text-sm ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-slate-300'}`}
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <select value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                          className={`border rounded-lg px-3 py-1.5 w-full text-sm ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-slate-300'}`}
-                        >
-                          {categories.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
-                        </select>
-                      </td>
-                      <td className="px-4 py-3"></td>
-                      <td className="px-4 py-3"></td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-1.5">
-                          <button onClick={() => handleSave(expense._id)}
-                            className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition-all" title="Save">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                          </button>
-                          <button onClick={() => setEditingId(null)}
-                            className={`p-2 rounded-lg transition-all ${isDark ? 'bg-slate-700 text-slate-400 hover:bg-slate-600' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`} title="Cancel">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                          </button>
-                        </div>
-                      </td>
-                    </>
-                  ) : (
-                    // Display mode
-                    <>
-                      <td className={`px-4 py-3.5 text-sm font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                        <div className="flex flex-col">
-                          <span>{expense.merchant}</span>
-                          {expense.needsReview && (
-                            <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider mt-0.5 animate-pulse">⚠️ Needs Review</span>
+              sortedAndFilteredExpenses.map((expense, index) => {
+                const isEven = index % 2 === 0;
+                const rowBg = isEven ? 'bg-white' : 'bg-gray-50';
+
+                return (
+                  <tr
+                    key={expense._id}
+                    className={`transition-colors duration-150 ${rowBg} hover:bg-blue-50/70 border-0`}
+                  >
+                    {editingId === expense._id ? (
+                      /* Inline Edit Mode */
+                      <>
+                        <td className="px-3 py-2">
+                          <input
+                            type="text"
+                            value={editForm.merchant}
+                            onChange={(e) => setEditForm({ ...editForm, merchant: e.target.value })}
+                            className="w-full bg-white border-2 border-blue-500 rounded-md px-2.5 py-1 text-xs font-semibold focus:outline-none"
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <input
+                            type="text"
+                            value={editForm.date}
+                            onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
+                            className="w-full bg-white border-2 border-blue-500 rounded-md px-2.5 py-1 text-xs font-semibold focus:outline-none"
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={editForm.total}
+                            onChange={(e) => setEditForm({ ...editForm, total: parseFloat(e.target.value) })}
+                            className="w-full bg-white border-2 border-blue-500 rounded-md px-2.5 py-1 text-xs font-semibold focus:outline-none"
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={editForm.tax}
+                            onChange={(e) => setEditForm({ ...editForm, tax: parseFloat(e.target.value) })}
+                            className="w-full bg-white border-2 border-blue-500 rounded-md px-2.5 py-1 text-xs font-semibold focus:outline-none"
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <select
+                            value={editForm.category}
+                            onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                            className="w-full bg-white border-2 border-blue-500 rounded-md px-2 py-1 text-xs font-semibold focus:outline-none"
+                          >
+                            {categories.map(cat => (
+                              <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-3 py-2"></td>
+                        <td className="px-3 py-2"></td>
+                        <td className="px-3 py-2">
+                          <div className="flex gap-1.5">
+                            <button
+                              onClick={() => handleSave(expense._id)}
+                              type="button"
+                              className="p-1.5 rounded-md bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
+                              title="Save Changes"
+                            >
+                              <Check size={16} strokeWidth={2.5} />
+                            </button>
+                            <button
+                              onClick={() => setEditingId(null)}
+                              type="button"
+                              className="p-1.5 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors"
+                              title="Cancel"
+                            >
+                              <X size={16} strokeWidth={2.5} />
+                            </button>
+                          </div>
+                        </td>
+                      </>
+                    ) : (
+                      /* Display Mode */
+                      <>
+                        <td className="px-4 py-3.5 text-sm font-bold text-gray-900">
+                          <div className="flex flex-col">
+                            <span>{expense.merchant}</span>
+                            {expense.needsReview && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-red-600 uppercase tracking-wider mt-0.5">
+                                <AlertTriangle size={11} strokeWidth={2.5} /> Needs Review
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5 text-xs font-medium text-gray-600">
+                          {expense.date}
+                        </td>
+                        {/* Rule 5: Income vs expense must not rely on color alone: add +/- sign and arrow */}
+                        <td className="px-4 py-3.5 text-sm font-extrabold text-gray-900">
+                          {expense.total !== null && expense.total !== undefined ? (
+                            <span className="inline-flex items-center gap-0.5 text-red-600">
+                              <ArrowDownRight size={14} strokeWidth={2.5} />
+                              -₹{expense.total.toFixed(2)}
+                            </span>
+                          ) : (
+                            <span className="text-red-500 font-bold text-xs uppercase">Pending</span>
                           )}
-                        </div>
-                      </td>
-                      <td className={`px-4 py-3.5 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{expense.date}</td>
-                      <td className={`px-4 py-3.5 text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                        {expense.total !== null && expense.total !== undefined ? `₹${expense.total.toFixed(2)}` : (
-                          <span className="text-red-500 font-bold">Pending</span>
-                        )}
-                      </td>
-                      <td className={`px-4 py-3.5 text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                        {expense.tax !== null && expense.tax !== undefined ? `₹${expense.tax.toFixed(2)}` : '—'}
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-lg ${getCatStyle(expense.category).badge}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${getCatStyle(expense.category).dot}`}></span>
-                          {expense.category}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <ConfidenceBar
-                          value={expense.confidence}
-                          color={expense.confidence >= 70 ? 'bg-emerald-500' : expense.confidence >= 40 ? 'bg-amber-500' : 'bg-red-500'}
-                        />
-                      </td>
-                      <td className="px-4 py-3.5 text-sm">
-                        {expense.categorizationSource === 'ml' ? (
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-lg ${isDark ? 'bg-indigo-500/15 text-indigo-400' : 'bg-indigo-50 text-indigo-700'}`}>
-                            🤖 ML {Math.round(expense.mlConfidence * 100)}%
-                          </span>
-                        ) : (
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-lg ${isDark ? 'bg-slate-700/50 text-slate-400' : 'bg-slate-100 text-slate-600'}`}>
-                            📏 Rules
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          <button onClick={() => handleEdit(expense)}
-                            className={`p-2 rounded-lg transition-all ${isDark ? 'hover:bg-blue-500/10 text-blue-400' : 'hover:bg-blue-50 text-blue-600'}`} title="Edit">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                          </button>
-                          <button onClick={() => handleDelete(expense._id)}
-                            className={`p-2 rounded-lg transition-all ${isDark ? 'hover:bg-red-500/10 text-red-400' : 'hover:bg-red-50 text-red-600'}`} title="Delete">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
-                    </>
-                  )}
-                </tr>
-              ))
+                        </td>
+                        <td className="px-4 py-3.5 text-xs font-medium text-gray-500">
+                          {expense.tax !== null && expense.tax !== undefined ? `₹${expense.tax.toFixed(2)}` : '—'}
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <Badge category={expense.category} />
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <ConfidenceBar value={expense.confidence} />
+                        </td>
+                        <td className="px-4 py-3.5 text-xs font-bold">
+                          {expense.categorizationSource === 'ml' ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 font-bold uppercase tracking-wider text-[11px]">
+                              <Bot size={13} strokeWidth={2.5} /> ML {Math.round((expense.mlConfidence || 0) * 100)}%
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-200 text-gray-700 font-bold uppercase tracking-wider text-[11px]">
+                              Rules
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <div className="flex gap-1.5">
+                            <button
+                              onClick={() => handleEdit(expense)}
+                              type="button"
+                              className="p-1.5 rounded-md text-blue-600 hover:bg-blue-100 transition-colors"
+                              title="Edit Expense"
+                            >
+                              <Edit2 size={16} strokeWidth={2.5} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(expense._id)}
+                              type="button"
+                              className="p-1.5 rounded-md text-red-600 hover:bg-red-100 transition-colors"
+                              title="Delete Expense"
+                            >
+                              <Trash2 size={16} strokeWidth={2.5} />
+                            </button>
+                          </div>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
       </div>
 
-      {/* Mobile Card View */}
-      <div className="md:hidden space-y-3 p-4">
+      {/* Mobile Card View - Rule 13: horizontal scroll or collapsed stacked cards */}
+      <div className="md:hidden space-y-3 p-4 bg-gray-50">
         {sortedAndFilteredExpenses.length === 0 ? (
-          <div className={`text-center py-8 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-            <span className="text-3xl block mb-2">📋</span>
-            No expenses found
+          <div className="text-center py-8 text-gray-500">
+            <Receipt size={32} strokeWidth={2} className="mx-auto mb-2 text-gray-400" />
+            <p className="font-bold text-sm">No expenses found</p>
           </div>
         ) : (
-          sortedAndFilteredExpenses.map((expense, index) => (
+          sortedAndFilteredExpenses.map((expense) => (
             <div
               key={expense._id}
-              className={`rounded-xl p-4 border transition-all duration-200 animate-slide-up ${isDark ? 'bg-slate-700/30 border-slate-700/50 hover:bg-slate-700/50' : 'bg-white border-slate-200 hover:shadow-md'}`}
-              style={{ animationDelay: `${index * 0.05}s` }}
+              className="rounded-lg p-4 bg-white border-2 border-gray-200 shadow-none space-y-3"
             >
               {editingId === expense._id ? (
                 <div className="space-y-3">
-                  <input type="text" value={editForm.merchant} onChange={(e) => setEditForm({ ...editForm, merchant: e.target.value })} placeholder="Merchant"
-                    className={`border rounded-lg px-3 py-2 w-full text-sm ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-slate-300'}`} />
+                  <Input
+                    label="Merchant"
+                    value={editForm.merchant}
+                    onChange={(e) => setEditForm({ ...editForm, merchant: e.target.value })}
+                  />
                   <div className="grid grid-cols-2 gap-2">
-                    <input type="text" value={editForm.date} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })} placeholder="Date"
-                      className={`border rounded-lg px-3 py-2 w-full text-sm ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-slate-300'}`} />
-                    <input type="number" step="0.01" value={editForm.total} onChange={(e) => setEditForm({ ...editForm, total: parseFloat(e.target.value) })} placeholder="Total"
-                      className={`border rounded-lg px-3 py-2 w-full text-sm ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-slate-300'}`} />
+                    <Input
+                      label="Date"
+                      value={editForm.date}
+                      onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
+                    />
+                    <Input
+                      label="Total (₹)"
+                      type="number"
+                      step="0.01"
+                      value={editForm.total}
+                      onChange={(e) => setEditForm({ ...editForm, total: parseFloat(e.target.value) })}
+                    />
                   </div>
-                  <select value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                    className={`border rounded-lg px-3 py-2 w-full text-sm ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'border-slate-300'}`}>
-                    {categories.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
-                  </select>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleSave(expense._id)} className="flex-1 py-2 bg-emerald-500 text-white rounded-lg text-sm font-semibold">Save</button>
-                    <button onClick={() => setEditingId(null)} className={`flex-1 py-2 rounded-lg text-sm font-semibold ${isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-100 text-slate-700'}`}>Cancel</button>
+                  <Select
+                    label="Category"
+                    value={editForm.category}
+                    onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                  >
+                    {categories.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </Select>
+                  <div className="flex gap-2 pt-2">
+                    <Button variant="primary" size="sm" onClick={() => handleSave(expense._id)} className="flex-1">
+                      Save
+                    </Button>
+                    <Button variant="secondary" size="sm" onClick={() => setEditingId(null)} className="flex-1">
+                      Cancel
+                    </Button>
                   </div>
                 </div>
               ) : (
                 <>
-                  <div className="flex justify-between items-start mb-3">
+                  <div className="flex justify-between items-start">
                     <div>
-                      <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                      <h3 className="font-extrabold text-gray-900 text-base leading-snug">
                         {expense.merchant}
-                        {expense.needsReview && (
-                          <span className="ml-2 inline-block px-1.5 py-0.5 text-[9px] bg-red-500/10 text-red-500 rounded font-bold uppercase tracking-wider align-middle animate-pulse">⚠️ Needs Review</span>
-                        )}
                       </h3>
-                      <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{expense.date}</p>
+                      <p className="text-xs font-semibold text-gray-500 mt-0.5">{expense.date}</p>
+                      {expense.needsReview && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-red-100 text-red-700 text-[10px] font-extrabold rounded mt-1 uppercase tracking-wider">
+                          <AlertTriangle size={10} strokeWidth={2.5} /> Needs Review
+                        </span>
+                      )}
                     </div>
                     <div className="text-right">
                       {expense.total !== null && expense.total !== undefined ? (
-                        <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>₹{expense.total.toFixed(2)}</p>
+                        <span className="inline-flex items-center text-lg font-black text-red-600">
+                          <ArrowDownRight size={16} strokeWidth={2.5} />
+                          -₹{expense.total.toFixed(2)}
+                        </span>
                       ) : (
-                        <p className="text-red-500 text-sm font-bold">Pending Review</p>
+                        <span className="text-red-500 text-xs font-bold uppercase">Pending</span>
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 mb-3">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-lg ${getCatStyle(expense.category).badge}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${getCatStyle(expense.category).dot}`}></span>
-                      {expense.category}
-                    </span>
+
+                  <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-gray-100">
+                    <Badge category={expense.category} />
                     {expense.categorizationSource === 'ml' ? (
-                      <span className={`text-xs px-2 py-1 rounded-lg font-semibold ${isDark ? 'bg-indigo-500/15 text-indigo-400' : 'bg-indigo-50 text-indigo-700'}`}>🤖 ML</span>
+                      <span className="text-[11px] px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-bold uppercase tracking-wider">
+                        ML {Math.round((expense.mlConfidence || 0) * 100)}%
+                      </span>
                     ) : (
-                      <span className={`text-xs px-2 py-1 rounded-lg font-semibold ${isDark ? 'bg-slate-700 text-slate-400' : 'bg-slate-100 text-slate-600'}`}>📏 Rules</span>
+                      <span className="text-[11px] px-2 py-0.5 rounded bg-gray-200 text-gray-700 font-bold uppercase tracking-wider">
+                        Rules
+                      </span>
                     )}
-                    <ConfidenceBar value={expense.confidence} color={expense.confidence >= 70 ? 'bg-emerald-500' : expense.confidence >= 40 ? 'bg-amber-500' : 'bg-red-500'} />
+                    <ConfidenceBar value={expense.confidence} />
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleEdit(expense)}
-                      className={`flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${isDark ? 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}>
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+
+                  <div className="flex gap-2 pt-2 border-t border-gray-100">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleEdit(expense)}
+                      className="flex-1"
+                    >
+                      <Edit2 size={14} strokeWidth={2.5} className="mr-1.5" />
                       Edit
-                    </button>
-                    <button onClick={() => handleDelete(expense._id)}
-                      className={`flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${isDark ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-600 hover:bg-red-100'}`}>
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => handleDelete(expense._id)}
+                      className="flex-1"
+                    >
+                      <Trash2 size={14} strokeWidth={2.5} className="mr-1.5" />
                       Delete
-                    </button>
+                    </Button>
                   </div>
                 </>
               )}
