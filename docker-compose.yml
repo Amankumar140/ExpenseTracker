@@ -22,6 +22,9 @@ services:
       - "8000:8000"
     environment:
       - PORT=8000
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - LLM_PROVIDER=${LLM_PROVIDER:-groq}
+      - GROQ_MODEL=${GROQ_MODEL:-qwen/qwen3.8-27b}
       - MISTRAL_API_KEY=${MISTRAL_API_KEY:-}
 
   # 3. Express Node.js Backend API
@@ -39,24 +42,10 @@ services:
       - MONGODB_URI=mongodb://mongo:27017/expensetracker
       - JWT_SECRET=${JWT_SECRET:-supersecretjwtkey12345}
       - ML_SERVICE_URL=http://ml-service:8000
-      - FRONTEND_URL=http://localhost:3000
+      - FRONTEND_URL=${FRONTEND_URL:-https://expense-tracker-eight-flax-34.vercel.app}
     depends_on:
       - mongo
       - ml-service
-
-  # 4. React Vite Frontend (NGINX)
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - VITE_API_URL=http://localhost:5000/api
-    container_name: expensetracker-frontend
-    restart: always
-    ports:
-      - "3000:80"
-    depends_on:
-      - backend
 
 volumes:
   mongo_data:
