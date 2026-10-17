@@ -1,3 +1,7 @@
+# Environment variables
+.env
+.env.*
+
 # Python
 __pycache__/
 *.py[cod]
@@ -18,7 +22,12 @@ model/*.pkl
 .vscode/
 .idea/
 
-#data
-/data
+# OS
+.DS_Store
+Thumbs.db
 
+# Data & Logs
+/data
+logs/
+*.log
 logs/*.jsonl
