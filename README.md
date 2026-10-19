@@ -10,8 +10,17 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
 [![PaddleOCR](https://img.shields.io/badge/PaddleOCR-v3-0052CC)](https://github.com/PaddlePaddle/PaddleOCR)
 [![LangChain](https://img.shields.io/badge/LangChain-0.3.0-1C3C3C?logo=langchain)](https://www.langchain.com/)
-[![Mistral AI](https://img.shields.io/badge/Mistral_AI-small--latest-FF7000)](https://mistral.ai/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb)](https://www.mongodb.com/)
+[![Groq AI](https://img.shields.io/badge/Groq_AI-Qwen--2.5--32B-F55036)](https://groq.com/)
+[![AWS EC2](https://img.shields.io/badge/AWS-EC2%20t3.micro-FF9900?logo=amazonec2)](https://aws.amazon.com/)
+[![Vercel](https://img.shields.io/badge/Frontend-Vercel-000000?logo=vercel)](https://expense-tracker-eight-flax-34.vercel.app)
+[![HTTPS Secured](https://img.shields.io/badge/SSL-Let's%20Encrypt-003A70?logo=letsencrypt)](https://backend-expenstracker.amankumar.runs-on.dev)
+
+---
+
+### 🌐 Live Deployment
+- **Frontend (Vercel)**: [https://expense-tracker-eight-flax-34.vercel.app](https://expense-tracker-eight-flax-34.vercel.app)
+- **Backend API & ML Microservice (AWS EC2 + Nginx HTTPS)**: [https://backend-expenstracker.amankumar.runs-on.dev](https://backend-expenstracker.amankumar.runs-on.dev)
+- **Deployment Documentation**: [Complete AWS Deployment & CI/CD Guide](AWS_DEPLOYMENT_GUIDE.md)
 
 ---
 
@@ -238,7 +247,7 @@ ExpenseTracker/
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/your-username/ExpenseTracker.git
+git clone https://github.com/Amankumar140/ExpenseTracker.git
 cd ExpenseTracker
 ```
 
@@ -271,6 +280,18 @@ cd ../frontend
 npm install
 npm run dev
 ```
+
+### 5. Docker Deployment (Run Everything with One Command)
+You can run the entire platform (**MongoDB**, **Python ML Microservice**, and **Node.js Backend**) in isolated Docker containers:
+
+```bash
+# In the project root directory:
+docker-compose up -d --build
+```
+
+### 6. Cloud & Production Deployment (AWS EC2 + Vercel)
+For production hosting on **AWS EC2 (`t3.micro`)** with automated Nginx SSL (`certbot`) and CI/CD via GitHub Actions, follow our complete step-by-step guide:
+👉 **[Read the Complete AWS Deployment & CI/CD Guide (AWS_DEPLOYMENT_GUIDE.md)](AWS_DEPLOYMENT_GUIDE.md)**
 
 ---
 
@@ -331,18 +352,6 @@ npm run dev
 
 ---
 
-## 🖼️ Screenshots
-
-### Dashboard
-![Dashboard Placeholder](public/screenshots/dashboard.png)
-
-### Receipt Upload & Auto-Extraction
-![Upload Receipt Placeholder](public/screenshots/upload.png)
-
-### Analytics & Reports
-![Analytics Placeholder](public/screenshots/analytics.png)
-
----
 
 ## 🧩 Project Structure & Design Philosophy
 
@@ -369,25 +378,9 @@ npm run dev
 
 ---
 
-## 🚀 Future Improvements
+ 
 
-- [ ] **Multi-page PDF Parsing**: Support multi-page receipt PDFs.
-- [ ] **Cloud Object Storage Integration**: Replace local disk file uploads with AWS S3 / Cloudinary storage.
-- [ ] **GPU Inference Acceleration**: Enable CUDA / TensorRT support for sub-second PaddleOCR inference.
-- [ ] **Automated Budget Alerts**: Notify users when category spending limits are exceeded.
-
----
-
-## 📝 Resume Highlights
-
-- **Architected Decoupled Microservices Platform**: Designed a 3-tier system with React 19, Node.js Express, and FastAPI Python to process receipt images.
-- **Engineered OpenCV & PaddleOCR Pipeline**: Implemented contour deskewing (`minAreaRect`) and PaddleOCR v3 (PP-OCRv6) execution, achieving high accuracy text extraction.
-- **Integrated LangChain + Mistral AI LLM Chain**: Orchestrated zero-shot LLM extraction using `RunnableSequence` and `PydanticOutputParser` to normalize merchant names and classify expenses into 20 constrained categories.
-- **Built Multi-Stage Fallback Architecture**: Created a resilient fallback pipeline (Regex $\rightarrow$ LLM $\rightarrow$ Keyword Lookup) ensuring 100% API availability during LLM outages.
-- **Optimized CPU Latency**: Reduced OCR execution times by up to 60% via aspect-preserved image resolution scaling and startup model pre-warming.
-- **Designed MongoDB Aggregation Engine**: Constructed MongoDB `$facet` aggregation pipelines to compute spending metrics across multiple years in a single database round-trip.
-
----
+ 
 
 ## 💡 What I Learned
 
@@ -414,8 +407,8 @@ Distributed under the MIT License. See [`LICENSE`](LICENSE) for details.
 
 ---
 
-## ✉️ Contact
-
-- **GitHub**: [your-username](https://github.com/your-username)
-- **LinkedIn**: [your-linkedin](https://linkedin.com/in/your-linkedin)
-- **Email**: [your-email@example.com](mailto:your-email@example.com)
+## ✉️ Contact & Author
+- **Author**: Aman Kumar
+- **GitHub**: [@Amankumar140](https://github.com/Amankumar140)
+- **Repository**: [Amankumar140/ExpenseTracker](https://github.com/Amankumar140/ExpenseTracker)
+- **Live Demo**: [ExpenseTrack on Vercel](https://expense-tracker-eight-flax-34.vercel.app)

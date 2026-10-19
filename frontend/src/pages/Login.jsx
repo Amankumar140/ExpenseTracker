@@ -29,15 +29,31 @@ const Login = () => {
       const validationErrors = err.response?.data?.errors;
 
       if (validationErrors && validationErrors.length > 0) {
-        setError(validationErrors.map(e => e.message).join(', '));
+        setError({
+          message: validationErrors.map(e => e.message).join(', '),
+          isUnregistered: false
+        });
+      } else if (errorMessage === 'User not found' || err.response?.status === 404) {
+        setError({
+          message: 'This email is not registered. Please register / create an account first.',
+          isUnregistered: true
+        });
+      } else if (errorMessage === 'Incorrect password') {
+        setError({
+          message: 'Incorrect password. Please check your password and try again.',
+          isUnregistered: false
+        });
       } else if (errorMessage) {
-        if (errorMessage.includes('Invalid email') || err.response?.status === 401) {
-          setError('User not found. Please sign up first.');
-        } else {
-          setError(errorMessage);
-        }
+        const isNotReg = errorMessage.toLowerCase().includes('not found') || errorMessage.toLowerCase().includes('not registered');
+        setError({
+          message: isNotReg ? 'This email is not registered. Please register / create an account first.' : errorMessage,
+          isUnregistered: isNotReg
+        });
       } else {
-        setError('Failed to sign in. Please check your credentials.');
+        setError({
+          message: 'Failed to sign in. Please check your credentials.',
+          isUnregistered: false
+        });
       }
     } finally {
       setLoading(false);
@@ -72,9 +88,29 @@ const Login = () => {
         <Card color="white" padding="default" className="border-2 border-gray-900 shadow-none">
           <form className="space-y-4" onSubmit={handleSubmit}>
             {error && (
-              <div className="p-3.5 rounded-md bg-red-50 border-2 border-red-500 text-red-700 text-sm font-semibold flex items-center gap-2">
-                <AlertCircle size={18} strokeWidth={2.5} className="flex-shrink-0 text-red-600" />
-                <span>{error}</span>
+              <div className={`p-4 rounded-md border-2 ${
+                error.isUnregistered
+                  ? 'bg-amber-50 border-amber-500 text-amber-900'
+                  : 'bg-red-50 border-red-500 text-red-700'
+              } text-sm font-semibold flex flex-col gap-2`}>
+                <div className="flex items-start gap-2.5">
+                  <AlertCircle size={20} strokeWidth={2.5} className={`flex-shrink-0 mt-0.5 ${
+                    error.isUnregistered ? 'text-amber-600' : 'text-red-600'
+                  }`} />
+                  <div className="flex-1">
+                    <p>{error.message}</p>
+                    {error.isUnregistered && (
+                      <div className="mt-2.5">
+                        <Link
+                          to="/signup"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded transition-colors shadow-none"
+                        >
+                          Register First →
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 

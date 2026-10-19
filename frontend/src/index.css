@@ -63,8 +63,19 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Accessible focus visible rings */
 *:focus-visible {
-  outline: 2px solid #3B82F6 !important;
-  outline-offset: 2px !important;
+  outline: 2px solid #3B82F6;
+  outline-offset: 2px;
+}
+
+/* Form inputs & controls manage their own clean border on focus — prevent double-line outline */
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
 }
 
 /* Selection */

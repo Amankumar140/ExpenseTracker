@@ -47,11 +47,16 @@ const Signup = () => {
 
       if (validationErrors && validationErrors.length > 0) {
         const errorMessages = validationErrors.map(e => e.message);
-        setError(errorMessages.join('. '));
+        setError({ message: errorMessages.join('. '), isAlreadyRegistered: false });
+      } else if (errorMessage === 'Email already registered') {
+        setError({
+          message: 'This email is already registered. Please sign in instead.',
+          isAlreadyRegistered: true
+        });
       } else if (errorMessage) {
-        setError(errorMessage);
+        setError({ message: errorMessage, isAlreadyRegistered: false });
       } else {
-        setError('Failed to create account. Please try again.');
+        setError({ message: 'Failed to create account. Please try again.', isAlreadyRegistered: false });
       }
     } finally {
       setLoading(false);
@@ -86,9 +91,29 @@ const Signup = () => {
         <Card color="white" padding="default" className="border-2 border-gray-900 shadow-none">
           <form className="space-y-4" onSubmit={handleSubmit}>
             {error && (
-              <div className="p-3.5 rounded-md bg-red-50 border-2 border-red-500 text-red-700 text-sm font-semibold flex items-center gap-2">
-                <AlertCircle size={18} strokeWidth={2.5} className="flex-shrink-0 text-red-600" />
-                <span>{error}</span>
+              <div className={`p-4 rounded-md border-2 ${
+                error.isAlreadyRegistered
+                  ? 'bg-amber-50 border-amber-500 text-amber-900'
+                  : 'bg-red-50 border-red-500 text-red-700'
+              } text-sm font-semibold flex flex-col gap-2`}>
+                <div className="flex items-start gap-2.5">
+                  <AlertCircle size={20} strokeWidth={2.5} className={`flex-shrink-0 mt-0.5 ${
+                    error.isAlreadyRegistered ? 'text-amber-600' : 'text-red-600'
+                  }`} />
+                  <div className="flex-1">
+                    <p>{error.message}</p>
+                    {error.isAlreadyRegistered && (
+                      <div className="mt-2.5">
+                        <Link
+                          to="/login"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded transition-colors shadow-none"
+                        >
+                          Sign In Instead →
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 

@@ -45,12 +45,12 @@ const Input = ({
           placeholder={placeholder}
           required={required}
           disabled={disabled}
-          className={`w-full rounded-md text-sm text-gray-900 transition-colors duration-200 shadow-none outline-none ${
+          className={`w-full rounded-md text-sm text-gray-900 transition-colors duration-200 shadow-none outline-none focus:outline-none ${
             Icon ? 'pl-10 pr-4' : 'px-4'
           } py-2.5 sm:py-3 ${
             error
-              ? 'bg-red-50/50 border-2 border-red-500 focus:bg-white focus:border-red-600 focus:ring-2 focus:ring-red-500 focus:ring-offset-2'
-              : 'bg-gray-100 border-2 border-transparent focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+              ? 'bg-red-50/50 border-2 border-red-500 focus:bg-white focus:border-red-600 focus:ring-0'
+              : 'bg-gray-100 border-2 border-transparent focus:bg-white focus:border-blue-500 focus:ring-0'
           } ${disabled ? 'opacity-60 cursor-not-allowed' : ''} ${className}`}
           {...props}
         />
