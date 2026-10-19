@@ -20,7 +20,7 @@
 ### 🌐 Live Deployment
 - **Frontend (Vercel)**: [https://expense-tracker-eight-flax-34.vercel.app](https://expense-tracker-eight-flax-34.vercel.app)
 - **Backend API & ML Microservice (AWS EC2 + Nginx HTTPS)**: [https://backend-expenstracker.amankumar.runs-on.dev](https://backend-expenstracker.amankumar.runs-on.dev)
-- **Deployment Documentation**: [Complete AWS Deployment & CI/CD Guide](AWS_DEPLOYMENT_GUIDE.md)
+
 
 ---
 
